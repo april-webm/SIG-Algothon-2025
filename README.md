@@ -1,6 +1,14 @@
 # SIG x UNSW Algothon 2025
 
-This repository contains our strategy implementations for the algothon
+This repository contains our strategy implementations for the algothon. You can pull this 
+project onto your local machine by creating a new folder, opening a terminal on that folder and 
+type in the following commands
+
+```shell
+git init
+git remote add origin git@github.com:johnpioc/sig-algothon-2025.git
+git pull origin main
+```
 
 ### Important Notes!!!
 
