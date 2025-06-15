@@ -130,7 +130,7 @@ class MarketData:
 
         # Plot
         plt.figure(figsize=(10,5))
-        plt.plot(days, prices, marker="o", linestyle="-")
+        plt.plot(days, prices, linestyle="-")
         if options is not None and options["moving_average"] != "none":
             plt.plot(days, moving_average, color="orange")
         plt.xlabel("Day")
@@ -161,7 +161,7 @@ class MarketData:
 
         # Plot volatility
         plt.figure(figsize=(10,5))
-        plt.plot(days, rolling_std, marker="o", linestyle="-")
+        plt.plot(days, rolling_std, linestyle="-")
         plt.xlabel("Day")
         plt.ylabel("Volatility")
         plt.title(f"Instrument {instrument_no}: Volatility from Day"
@@ -196,7 +196,7 @@ class MarketData:
 
         # Plot
         plt.figure(figsize=(10,5))
-        plt.plot(lags, autocorrelations, marker="o", linestyle="-")
+        plt.plot(lags, autocorrelations, linestyle="-")
         plt.xlabel("K")
         plt.ylabel("Auto-Correlation")
         plt.title(f"Instrument {instrument_no}: Auto-correlation from day {start_day} to "
