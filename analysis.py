@@ -12,7 +12,6 @@ import matplotlib.pyplot as plt
 START_DATE: int = 0
 END_DATE: int = 300
 NUMBER_OF_INSTRUMENTS: int = 50
-RAW_PRICES_FILEPATH: str = "./prices.txt"
 
 # Standard Deviation Lookbacks
 SHORT_TERM_STDDEV_LOOKBACK: int = 10
@@ -55,10 +54,10 @@ class PricePlotOptions(TypedDict):
 
 # CLASSES ########################################################################################
 class MarketData:
-    def __init__(self, start_day: int, end_day: int) -> None:
+    def __init__(self, start_day: int, end_day: int, prices_filepath: str) -> None:
         # Initialise the market data dataframe
         self.market_data_df: DataFrame | None = None
-        self.initialise_market_data_dataframe(start_day, end_day)
+        self.initialise_market_data_dataframe(start_day, end_day, prices_filepath)
 
     def get_instrument_data(self, instrument_no: int, start_day: int, end_day: int) -> DataFrame:
         # Filter rows matching the instrument and day range and sort by day
@@ -78,9 +77,9 @@ class MarketData:
     - open-price: the price at market open for that instrument on that day
     - return: the percentage change for that instrument on that day based on the previous day
     """
-    def initialise_market_data_dataframe(self, start_day, end_day) -> DataFrame:
+    def initialise_market_data_dataframe(self, start_day, end_day, prices_filepath: str) -> None:
         # Read the raw prices dataset file
-        raw_prices_df: DataFrame = pd.read_csv(RAW_PRICES_FILEPATH, sep=r"\s+", header=None)
+        raw_prices_df: DataFrame = pd.read_csv(prices_filepath, sep=r"\s+", header=None)
 
         # Initialise a new empty market data dataframe
         market_data_df: DataFrame = pd.DataFrame(columns=["day", "instrument-no", "open-price",
@@ -131,7 +130,7 @@ class MarketData:
 
         # Plot
         plt.figure(figsize=(10,5))
-        plt.plot(days, prices, marker="o", linestyle="-")
+        plt.plot(days, prices, linestyle="-")
         if options is not None and options["moving_average"] != "none":
             plt.plot(days, moving_average, color="orange")
         plt.xlabel("Day")
@@ -162,7 +161,7 @@ class MarketData:
 
         # Plot volatility
         plt.figure(figsize=(10,5))
-        plt.plot(days, rolling_std, marker="o", linestyle="-")
+        plt.plot(days, rolling_std, linestyle="-")
         plt.xlabel("Day")
         plt.ylabel("Volatility")
         plt.title(f"Instrument {instrument_no}: Volatility from Day"
@@ -197,7 +196,7 @@ class MarketData:
 
         # Plot
         plt.figure(figsize=(10,5))
-        plt.plot(lags, autocorrelations, marker="o", linestyle="-")
+        plt.plot(lags, autocorrelations, linestyle="-")
         plt.xlabel("K")
         plt.ylabel("Auto-Correlation")
         plt.title(f"Instrument {instrument_no}: Auto-correlation from day {start_day} to "
