@@ -265,13 +265,11 @@ class MarketData:
     over the specified timeline. I.e. what the maximum profit would be if we made absolute
     perfect trades on these instruments
     """
-    def get_maximum_theoretical_value(self, instrument_nos: List[int], start_day: int,
-                                      end_day: int) -> float:
+    def get_maximum_theoretical_value(self, instrument_nos: List[int], start_day: int, end_day: int) -> float:
         maximum_theoretical_value: float = 0
 
         for instrument_no in instrument_nos:
-            instrument_data: DataFrame = self.get_instrument_data(instrument_no, start_day,
-                                                                  end_day)
+            instrument_data: DataFrame = self.get_instrument_data(instrument_no, start_day, end_day)
             prices: ndarray = instrument_data["open-price"].to_numpy()
             cash: float = 0.0
             positions: int = 0
