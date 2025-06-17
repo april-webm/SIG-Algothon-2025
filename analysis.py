@@ -22,6 +22,9 @@ YEARLY_STDDEV_LOOKBACK: int = 252
 # Auto correlation default lag limit
 default_lag_limit: int = 20
 
+# Position Limits per instrument
+POSITION_LIMIT: int = 10000
+
 # Usage Error message
 usage_error_message: str = """
     Usage: analysis.py [instrument_no] [start_day] [end_day] [OPTION]
@@ -140,6 +143,35 @@ class MarketData:
         plt.tight_layout()
         plt.show()
 
+    def plot_ema_crossover(self, instrument_no: int, start_day: int, end_day: int,
+                           long_ema_periods: int, short_ema_periods: int) -> None:
+        # Get Instrument Data
+        instrument_data: DataFrame = self.get_instrument_data(instrument_no, start_day, end_day)
+
+        # Extract price series
+        prices: Series = instrument_data["open-price"]
+
+        # Initialise days
+        days: ndarray = np.arange(start_day, end_day, dtype=int)
+
+        # Calculate moving averages
+        short_moving_average: Series = prices.ewm(short_ema_periods, adjust=False).mean()
+        long_moving_average: Series = prices.ewm(long_ema_periods, adjust=False).mean()
+
+        # Plot
+        plt.figure(figsize=(10,5))
+        plt.plot(days, prices, linestyle="-", color="blue", label=f"Instrument {instrument_no}")
+        plt.plot(days, short_moving_average, linestyle="--", color="orange",
+                 label=f"Short Moving Average ({short_ema_periods} days)")
+        plt.plot(days, long_moving_average, linestyle="--", color="green",
+                 label=f"Long Moving Average ({long_ema_periods} days)")
+        plt.xlabel("Day")
+        plt.ylabel("Price ($)")
+        plt.legend()
+        plt.grid(alpha=0.3)
+        plt.show()
+
+
     """
     plots an instrument's volatility over a specified timeline and a given lookback. Function
     assumes that start_day >= lookback
@@ -225,6 +257,44 @@ class MarketData:
                   f"{start_day} to {end_day}")
         plt.grid(True, linestyle='--', alpha=0.5)
         plt.show()
+
+
+
+    """
+    Takes a list of instrument numbers (0-indexed) and returns the maximum theoretical value
+    over the specified timeline. I.e. what the maximum profit would be if we made absolute
+    perfect trades on these instruments
+    """
+    def get_maximum_theoretical_value(self, instrument_nos: List[int], start_day: int,
+                                      end_day: int) -> float:
+        maximum_theoretical_value: float = 0
+
+        for instrument_no in instrument_nos:
+            instrument_data: DataFrame = self.get_instrument_data(instrument_no, start_day,
+                                                                  end_day)
+            prices: ndarray = instrument_data["open-price"].to_numpy()
+            cash: float = 0.0
+            positions: int = 0
+
+            for i in range(len(prices) - 1):
+                new_position: int
+                current_price: float = prices[i]
+
+                if prices[i] < prices[i + 1]:
+                    new_position = POSITION_LIMIT // prices[i]
+                elif prices[i] > prices[i + 1]:
+                    new_position = -(POSITION_LIMIT // prices[i])
+                else:
+                    new_position = positions
+
+                delta_pos: int = new_position - positions
+                cash -= current_price * delta_pos
+                positions = new_position
+
+            maximum_value: float = cash + prices[-1] * positions
+            maximum_theoretical_value += maximum_value
+
+        return maximum_theoretical_value
 
 # MAIN EXECUTION #################################################################################
 def main() -> None:

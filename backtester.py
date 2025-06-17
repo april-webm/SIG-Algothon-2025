@@ -242,11 +242,11 @@ class Backtester:
         stats_text: str = (
                 f"Ran from day {start_day} to {end_day}\n"
                 r"$\bf{Commission \ Turned \ On:}$" + f"{self.enable_commission}\n\n"
-                r"$\bf{Backtester \ Stats}$" + "\n\n"
-                f"Mean PnL: ${daily_pnl.mean():.2f}\n"
-                f"Std Dev: ${daily_pnl.std():.2f}\n"
-                f"Annualised Sharpe Ratio: {np.sqrt(250) * daily_pnl.mean() / daily_pnl.std():.2f}\n"
-                f"Score: {daily_pnl.mean() - 0.1*daily_pnl.std():.2f}"
+                                                      r"$\bf{Backtester \ Stats}$" + "\n\n"
+                                                                                     f"Mean PnL: ${daily_pnl.mean():.2f}\n"
+                                                                                     f"Std Dev: ${daily_pnl.std():.2f}\n"
+                                                                                     f"Annualised Sharpe Ratio: {np.sqrt(250) * daily_pnl.mean() / daily_pnl.std():.2f}\n"
+                                                                                     f"Score: {daily_pnl.mean() - 0.1*daily_pnl.std():.2f}"
         )
 
         axs[0][0].text(0.05, 0.95, stats_text, fontsize=14, va="top", ha="left", linespacing=1.5)
