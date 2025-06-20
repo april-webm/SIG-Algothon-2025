@@ -31,7 +31,7 @@ for params in TRADING_PAIRS_PARAMS:
 
 current_positions_april = np.zeros(50)
 
-def get_aprils_positions(prices_so_far: DataFrame, allocated_instruments: List[int]) -> ndarray:
+def get_aprils_positions(prices_so_far: DataFrame) -> ndarray:
     global current_positions_april
     
     z_score_window = 60
