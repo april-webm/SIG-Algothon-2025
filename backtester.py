@@ -9,6 +9,7 @@ import sys
 import os
 from importlib.machinery import ModuleSpec
 from types import ModuleType, FunctionType
+from matplotlib.axes import Axes
 
 # CONSTANTS #######################################################################################
 START_DAY: int = 0
@@ -454,7 +455,10 @@ class Backtester:
             prices_so_far: ndarray = self.price_history[:, start_day - 1 : day]
 
             # Get desired positions from strategy
-            new_positions: ndarray = self.getMyPosition(prices_so_far, config, instruments_to_test)
+            if config is not None and instruments_to_test is not None:
+                new_positions: ndarray = self.getMyPosition(prices_so_far, config, instruments_to_test)
+            else:
+                new_positions: ndarray = self.getMyPosition(prices_so_far)
 
             # Get today's prices
             current_prices: ndarray = prices_so_far[:, -1]
