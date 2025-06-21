@@ -323,7 +323,7 @@ def main() -> None:
                         options["moving_average"] = "simple" if moving_average_arg == "sma" else (
                             "exponential")
                         market_data.plot_instrument_price_data(instrument_no, start_day,
-                                                               end_day, options)
+                                                           end_day, options)
                 else:
                     print(usage_error_message)
                     return

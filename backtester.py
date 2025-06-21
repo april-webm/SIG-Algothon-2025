@@ -1,5 +1,4 @@
 import pandas as pd
-from fontTools.t1Lib import write
 from pandas import DataFrame
 from typing import TypedDict, List, Dict, Any
 import numpy as np
@@ -9,12 +8,10 @@ import importlib.util
 import sys
 import os
 from importlib.machinery import ModuleSpec
-from types import ModuleType, FunctionType
-from matplotlib.axes import Axes
+from types import ModuleType
 
 
 # CONSTANTS #######################################################################################
-RAW_PRICES_FILEPATH: str = "./prices.txt"
 START_DAY: int = 0
 END_DAY: int = 0
 INSTRUMENT_POSITION_LIMIT: int = 10000
@@ -104,6 +101,7 @@ class Params:
             end_day: int = 750,
             enable_commission: bool = True,
             graphs: List[str] = ["cum-pnl", "sharpe-heat-map", "daily-pnl"],
+            prices_filepath: str = "./prices.txt"
     ) -> None:
         self.strategy_filepath = strategy_filepath
         self.strategy_function_name = strategy_function_name
@@ -112,6 +110,7 @@ class Params:
         self.end_day = end_day
         self.enable_commission = enable_commission
         self.graphs = graphs
+        self.prices_filepath: str = prices_filepath
 
 
 # HELPER FUNCTIONS ###############################################################################
@@ -415,14 +414,20 @@ class Backtester:
 
         # Load prices data
         self.raw_prices_df: DataFrame = pd.read_csv(
-            RAW_PRICES_FILEPATH, sep=r"\s+", header=None
+            params.prices_filepath, sep=r"\s+", header=None
         )
 
         # Transpose the raw prices such that every index represents an instrument number and each
         # row is a list of prices
         self.price_history: ndarray = self.raw_prices_df.to_numpy().T
 
-    def run(self, start_day: int, end_day: int) -> BacktesterResults:
+    def run(
+            self,
+            start_day: int,
+            end_day: int,
+            config: Dict[int, Dict[str, Dict[str, float]]] | None = None,
+            instruments_to_test: List[int] | None = None
+        ) -> BacktesterResults:
         """
         Run the backtest through specified timeline and keep track of daily PnL and capital usage
         :param start_day: day that the backtester should start running on
@@ -450,7 +455,7 @@ class Backtester:
             prices_so_far: ndarray = self.price_history[:, start_day - 1 : day]
 
             # Get desired positions from strategy
-            new_positions: ndarray = self.getMyPosition(prices_so_far)
+            new_positions: ndarray = self.getMyPosition(prices_so_far, config, instruments_to_test)
 
             # Get today's prices
             current_prices: ndarray = prices_so_far[:, -1]
@@ -568,5 +573,5 @@ def main() -> None:
     )
     backtester.show_dashboard(backtester_results, params.graphs)
 
-
-main()
+if __name__ == "__main__":
+    main()
