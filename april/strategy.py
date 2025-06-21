@@ -1,5 +1,5 @@
 import pandas as pd
-from pandas import DataFrame
+from pandas import DataFrame, Series
 from typing import List, Dict, Any
 import numpy as np
 from numpy import ndarray
@@ -31,7 +31,7 @@ for params in TRADING_PAIRS_PARAMS:
 
 current_positions_april = np.zeros(50)
 
-def get_aprils_positions(prices_so_far: DataFrame) -> ndarray:
+def get_aprils_positions(prices_so_far: ndarray) -> ndarray:
     global current_positions_april
     
     z_score_window = 60

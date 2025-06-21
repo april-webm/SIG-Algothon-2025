@@ -20,7 +20,7 @@ nInst = 50
 currentPos = np.zeros(nInst)
 
 # GET POSITIONS FUNCTION #########################################################################
-def getMyPosition(prcSoFar: DataFrame) -> ndarray:
+def getMyPosition(prcSoFar: ndarray) -> ndarray:
     aprils_trades: ndarray = get_aprils_positions(prcSoFar)
     johns_trades: ndarray = get_johns_positions(prcSoFar)
     inukas_trades: ndarray = get_inukas_positions(prcSoFar)

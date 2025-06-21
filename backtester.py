@@ -8,8 +8,7 @@ import importlib.util
 import sys
 import os
 from importlib.machinery import ModuleSpec
-from types import ModuleType
-
+from types import ModuleType, FunctionType
 
 # CONSTANTS #######################################################################################
 START_DAY: int = 0

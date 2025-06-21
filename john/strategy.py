@@ -31,7 +31,7 @@ def get_instrument_positions(instrument_no: int, instrument_price_history: Serie
 # MAIN STRATEGY FUNCTION ##########################################################################
 def get_johns_positions(prices_so_far: ndarray) -> ndarray:
     # FOR PRODUCTION
-    with open("config.json", "r") as config_file:
+    with open("./john/config.json", "r") as config_file:
         config: Dict[int, Dict[str, Dict[str, float]]] = json.load(config_file)
 
         for instrument_no in allocated_instruments:
