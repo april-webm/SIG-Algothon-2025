@@ -1,0 +1,184 @@
+{
+  "0": {
+    "short_ema_lookback": {
+      "window_start": 5.0,
+      "window_end": 10.0,
+      "current_value": 10,
+      "best_value": 5
+    },
+    "long_ema_lookback": {
+      "window_start": 50.0,
+      "window_end": 200.0,
+      "current_value": 200,
+      "best_value": 105
+    }
+  },
+  "1": {
+    "short_ema_lookback": {
+      "window_start": 5.0,
+      "window_end": 10.0,
+      "current_value": 10,
+      "best_value": 8
+    },
+    "long_ema_lookback": {
+      "window_start": 50.0,
+      "window_end": 200.0,
+      "current_value": 200,
+      "best_value": 68
+    }
+  },
+  "2": {
+    "short_ema_lookback": {
+      "window_start": 5.0,
+      "window_end": 10.0,
+      "current_value": 10,
+      "best_value": 8
+    },
+    "long_ema_lookback": {
+      "window_start": 50.0,
+      "window_end": 200.0,
+      "current_value": 200,
+      "best_value": 164
+    }
+  },
+  "3": {
+    "short_ema_lookback": {
+      "window_start": 5.0,
+      "window_end": 10.0,
+      "current_value": 10,
+      "best_value": 9
+    },
+    "long_ema_lookback": {
+      "window_start": 50.0,
+      "window_end": 200.0,
+      "current_value": 200,
+      "best_value": 195
+    }
+  },
+  "4": {
+    "short_ema_lookback": {
+      "window_start": 5.0,
+      "window_end": 10.0,
+      "current_value": 10,
+      "best_value": 10
+    },
+    "long_ema_lookback": {
+      "window_start": 50.0,
+      "window_end": 200.0,
+      "current_value": 200,
+      "best_value": 96
+    }
+  },
+  "5": {
+    "short_ema_lookback": {
+      "window_start": 5.0,
+      "window_end": 10.0,
+      "current_value": 10,
+      "best_value": 10
+    },
+    "long_ema_lookback": {
+      "window_start": 50.0,
+      "window_end": 200.0,
+      "current_value": 200,
+      "best_value": 157
+    }
+  },
+  "6": {
+    "short_ema_lookback": {
+      "window_start": 5.0,
+      "window_end": 10.0,
+      "current_value": 10,
+      "best_value": 9
+    },
+    "long_ema_lookback": {
+      "window_start": 50.0,
+      "window_end": 200.0,
+      "current_value": 200,
+      "best_value": 200
+    }
+  },
+  "7": {
+    "short_ema_lookback": {
+      "window_start": 5.0,
+      "window_end": 10.0,
+      "current_value": 10,
+      "best_value": 8
+    },
+    "long_ema_lookback": {
+      "window_start": 50.0,
+      "window_end": 200.0,
+      "current_value": 200,
+      "best_value": 200
+    }
+  },
+  "22": {
+    "short_ema_lookback": {
+      "window_start": 5.0,
+      "window_end": 10.0,
+      "current_value": 10,
+      "best_value": 8
+    },
+    "long_ema_lookback": {
+      "window_start": 50.0,
+      "window_end": 200.0,
+      "current_value": 200,
+      "best_value": 155
+    }
+  },
+  "23": {
+    "short_ema_lookback": {
+      "window_start": 5.0,
+      "window_end": 10.0,
+      "current_value": 10,
+      "best_value": 5
+    },
+    "long_ema_lookback": {
+      "window_start": 50.0,
+      "window_end": 200.0,
+      "current_value": 200,
+      "best_value": 137
+    }
+  },
+  "24": {
+    "short_ema_lookback": {
+      "window_start": 5.0,
+      "window_end": 10.0,
+      "current_value": 10,
+      "best_value": 9
+    },
+    "long_ema_lookback": {
+      "window_start": 50.0,
+      "window_end": 200.0,
+      "current_value": 200,
+      "best_value": 118
+    }
+  },
+  "26": {
+    "short_ema_lookback": {
+      "window_start": 5.0,
+      "window_end": 10.0,
+      "current_value": 10,
+      "best_value": 5
+    },
+    "long_ema_lookback": {
+      "window_start": 50.0,
+      "window_end": 200.0,
+      "current_value": 200,
+      "best_value": 50
+    }
+  },
+  "27": {
+    "short_ema_lookback": {
+      "window_start": 5.0,
+      "window_end": 10.0,
+      "current_value": 10,
+      "best_value": 5
+    },
+    "long_ema_lookback": {
+      "window_start": 50.0,
+      "window_end": 200.0,
+      "current_value": 200,
+      "best_value": 50
+    }
+  }
+}
