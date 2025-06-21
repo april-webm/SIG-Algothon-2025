@@ -101,7 +101,8 @@ class Params:
             end_day: int = 750,
             enable_commission: bool = True,
             graphs: List[str] = ["cum-pnl", "sharpe-heat-map", "daily-pnl"],
-            prices_filepath: str = "./prices.txt"
+            prices_filepath: str = "./prices.txt",
+            instruments_to_test: List[int] = range(1, 51)
     ) -> None:
         self.strategy_filepath = strategy_filepath
         self.strategy_function_name = strategy_function_name
@@ -111,6 +112,7 @@ class Params:
         self.enable_commission = enable_commission
         self.graphs = graphs
         self.prices_filepath: str = prices_filepath
+        self.instruments_to_test: List[int] = instruments_to_test
 
 
 # HELPER FUNCTIONS ###############################################################################

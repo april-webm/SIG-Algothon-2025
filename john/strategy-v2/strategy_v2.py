@@ -122,8 +122,10 @@ def strategy_function(
                     config[str(instrument_no)]["long_ema_lookback"]["best_value"]
                 )
                 params["current_position"] = positions[instrument_no]
-                params["volatility_target"] = 1.00
-                params["volatility_lookback"] = 14
+                params["volatility_target"] = config[str(instrument_no)]["volatility_target"][
+                    "best_value"]
+                params["volatility_lookback"] = config[str(instrument_no)]["volatility_lookback"][
+                    "best_value"]
 
                 if len(instrument_price_data) < params["long_ema_lookback"]: continue
 
@@ -133,7 +135,8 @@ def strategy_function(
 
 # GRID SEARCHER ###################################################################################
 def grid_search() -> None:
-    volatility_target_window: List[float] = [0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0]
+    volatility_target_window: List[float] = [0.0025, 0.0050, 0.0075, 0.0100, 0.0125, 0.0150,
+                                             0.0175, 0.0200]
     volatility_lookback_window: List[float] = [5, 10, 14, 21, 30, 50, 75, 100, 125, 252]
 
     # Open Config File

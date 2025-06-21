@@ -11,6 +11,14 @@
       "window_end": 200.0,
       "current_value": 200,
       "best_value": 105
+    },
+    "volatility_target": {
+      "current_value": 2.0,
+      "best_value": 0.25
+    },
+    "volatility_lookback": {
+      "current_value": 252,
+      "best_value": 5
     }
   },
   "1": {
@@ -25,6 +33,14 @@
       "window_end": 200.0,
       "current_value": 200,
       "best_value": 68
+    },
+    "volatility_target": {
+      "current_value": 2.0,
+      "best_value": 0.25
+    },
+    "volatility_lookback": {
+      "current_value": 252,
+      "best_value": 5
     }
   },
   "2": {
@@ -39,6 +55,14 @@
       "window_end": 200.0,
       "current_value": 200,
       "best_value": 164
+    },
+    "volatility_target": {
+      "current_value": 2.0,
+      "best_value": 0.25
+    },
+    "volatility_lookback": {
+      "current_value": 252,
+      "best_value": 5
     }
   },
   "3": {
@@ -53,6 +77,14 @@
       "window_end": 200.0,
       "current_value": 200,
       "best_value": 195
+    },
+    "volatility_target": {
+      "current_value": 2.0,
+      "best_value": 0.25
+    },
+    "volatility_lookback": {
+      "current_value": 252,
+      "best_value": 5
     }
   },
   "4": {
@@ -67,6 +99,14 @@
       "window_end": 200.0,
       "current_value": 200,
       "best_value": 96
+    },
+    "volatility_target": {
+      "current_value": 2.0,
+      "best_value": 0.25
+    },
+    "volatility_lookback": {
+      "current_value": 252,
+      "best_value": 10
     }
   },
   "5": {
@@ -81,6 +121,14 @@
       "window_end": 200.0,
       "current_value": 200,
       "best_value": 157
+    },
+    "volatility_target": {
+      "current_value": 2.0,
+      "best_value": 0.25
+    },
+    "volatility_lookback": {
+      "current_value": 252,
+      "best_value": 5
     }
   },
   "6": {
@@ -95,6 +143,14 @@
       "window_end": 200.0,
       "current_value": 200,
       "best_value": 200
+    },
+    "volatility_target": {
+      "current_value": 2.0,
+      "best_value": 0.25
+    },
+    "volatility_lookback": {
+      "current_value": 252,
+      "best_value": 10
     }
   },
   "7": {
@@ -109,6 +165,14 @@
       "window_end": 200.0,
       "current_value": 200,
       "best_value": 200
+    },
+    "volatility_target": {
+      "current_value": 2.0,
+      "best_value": 0.25
+    },
+    "volatility_lookback": {
+      "current_value": 252,
+      "best_value": 5
     }
   },
   "22": {
@@ -123,6 +187,14 @@
       "window_end": 200.0,
       "current_value": 200,
       "best_value": 155
+    },
+    "volatility_target": {
+      "current_value": 2.0,
+      "best_value": 0.25
+    },
+    "volatility_lookback": {
+      "current_value": 252,
+      "best_value": 5
     }
   },
   "23": {
@@ -137,6 +209,14 @@
       "window_end": 200.0,
       "current_value": 200,
       "best_value": 137
+    },
+    "volatility_target": {
+      "current_value": 2.0,
+      "best_value": 0.25
+    },
+    "volatility_lookback": {
+      "current_value": 252,
+      "best_value": 10
     }
   },
   "24": {
@@ -151,6 +231,14 @@
       "window_end": 200.0,
       "current_value": 200,
       "best_value": 118
+    },
+    "volatility_target": {
+      "current_value": 2.0,
+      "best_value": 0.25
+    },
+    "volatility_lookback": {
+      "current_value": 252,
+      "best_value": 5
     }
   },
   "26": {
@@ -165,6 +253,14 @@
       "window_end": 200.0,
       "current_value": 200,
       "best_value": 50
+    },
+    "volatility_target": {
+      "current_value": 2.0,
+      "best_value": 0.25
+    },
+    "volatility_lookback": {
+      "current_value": 252,
+      "best_value": 10
     }
   },
   "27": {
@@ -179,6 +275,14 @@
       "window_end": 200.0,
       "current_value": 200,
       "best_value": 50
+    },
+    "volatility_target": {
+      "current_value": 2.0,
+      "best_value": 0.25
+    },
+    "volatility_lookback": {
+      "current_value": 252,
+      "best_value": 5
     }
   }
 }
