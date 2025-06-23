@@ -1,3 +1,5 @@
+from os import wait3
+
 import pandas as pd
 from pandas import DataFrame
 from typing import TypedDict, List, Dict, Any
@@ -688,96 +690,102 @@ class Backtester:
 			fontweight="bold")
 		plt.show()
 
-	def show_price_entries(self, backtester_results: BacktesterResults, config_file: str | None =
-	None):
+	def show_price_entries(self, backtester_results: BacktesterResults) -> None:
 		# Get Price Data
-		prices: ndarray = self.price_history[0][backtester_results["start_day"] - 1:
-												backtester_results["end_day"]]
+		prices_list: List[ndarray]= [
+			self.price_history[instrument_no][backtester_results["start_day"] - 1:
+			  backtester_results["end_day"]] for instrument_no in range(0,50)
+		]
+		prices: ndarray = np.array(prices_list)
 
 		# Get an ndarray of days
 		days: ndarray = np.arange(backtester_results["start_day"] - 1,
 			backtester_results["end_day"])
 
 		# Get buys and sells
-		instrument_trades: List[Trade] = backtester_results["trades"][0]
+		instrument_trades: List[List[Trade]] = [
+			backtester_results["trades"][instrument_no] for instrument_no in range(0,50)
+		]
 
-		buy_entry_prices: List[float] = []
-		buy_entry_days: List[int] = []
-		sell_entry_prices: List[float] = []
-		sell_entry_days: List[int] = []
+		buy_entry_prices: List[List[float]] = [[] for i in range(0,50)]
+		buy_entry_days: List[List[int]] = [[] for i in range(0,50)]
+		sell_entry_prices: List[List[float]] = [[] for i in range(0,50)]
+		sell_entry_days: List[List[int]] = [[] for i in range(0,50)]
 
-		for trade in instrument_trades:
-			if trade["order_type"] == "buy":
-				buy_entry_prices.append(trade["price_entry"])
-				buy_entry_days.append(trade["day"])
-			else:
-				sell_entry_prices.append(trade["price_entry"])
-				sell_entry_days.append(trade["day"])
+		for instrument_no in range(0,50):
+			for trade in instrument_trades[instrument_no]:
+				if trade["order_type"] == "buy":
+					buy_entry_prices[instrument_no].append(trade["price_entry"])
+					buy_entry_days[instrument_no].append(trade["day"])
+				else:
+					sell_entry_prices[instrument_no].append(trade["price_entry"])
+					sell_entry_days[instrument_no].append(trade["day"])
 
-		# If config file exists, get EMAs
-		long_ema: ndarray
-		short_ema: ndarray
-		if config_file is not None:
-			with open(config_file,
-				"r") as file:
-				config: Dict[str, Dict[str, Dict[str, float | List[float]]]] = json.load(file)
-				long_ema: ndarray = get_ema(prices,
-					config["0"]["long_ema_lookback"]["best_value"])
-				short_ema: ndarray = get_ema(prices,
-					config["0"]["short_ema_lookback"]["best_value"])
+		# Plot each instrument's price and entries
+		fig, ax = plt.subplots(figsize=(14,6))
+		instrument_no = 0
 
-		# Plot price
-		plt.figure(figsize=(14, 6))
-		plt.plot(days,
-			prices,
-			label=f"Price of instrument {0}",
+		# Plot Price
+		line, = ax.plot(
+			days,
+			prices[instrument_no],
+			label=f"Price of Instrument {instrument_no}",
 			color="blue",
 			linestyle="--",
 			linewidth=2,
-			zorder=1)
-
-		# Plot EMA
-		if config_file is not None:
-			plt.plot(
-				days,
-				long_ema,
-				label=f"Long EMA ({config['0']['long_ema_lookback']['best_value']} day lookback)",
-				color="orange",
-				linestyle="-",
-				linewidth="2"
-			)
-
-			plt.plot(
-				days,
-				short_ema,
-				label=f"Short EMA ({config['0']['short_ema_lookback']['best_value']} day lookback)",
-				color="pink",
-				linestyle="-",
-				linewidth="2"
-			)
+			zorder=1
+		)
 
 		# Plot entries
-		plt.scatter(buy_entry_days,
-			buy_entry_prices,
+		buy_scatter = ax.scatter(buy_entry_days[instrument_no],
+			buy_entry_prices[instrument_no],
 			color="green",
 			marker="^",
 			s=100,
 			label="Long Entry",
 			zorder=3)
-		plt.scatter(sell_entry_days,
-			sell_entry_prices,
+		sell_scatter = ax.scatter(sell_entry_days[instrument_no],
+			sell_entry_prices[instrument_no],
 			color="red",
 			marker="v",
 			s=100,
 			label="Short Entry",
 			zorder=3)
 
-		plt.title(f"Long/Short entries for instrument {0}")
-		plt.xlabel("Days")
-		plt.ylabel("Price")
-		plt.grid(True)
-		plt.legend()
-		plt.tight_layout()
+		ax.set_title(f"INSTRUMENT #{instrument_no} entries")
+
+		def on_key(event):
+			nonlocal instrument_no
+			if event.key == 'right':
+				instrument_no = (instrument_no + 1) % len(prices)
+			elif event.key == 'left':
+				instrument_no = (instrument_no - 1) % len(prices)
+			else:
+				return
+
+			# update the line data and title
+			line.set_ydata(prices[instrument_no])
+
+			buy_scatter.set_offsets(
+				np.column_stack((
+					buy_entry_days[instrument_no],
+					buy_entry_prices[instrument_no]
+				))
+			)
+
+			sell_scatter.set_offsets(
+				np.column_stack((
+					sell_entry_days[instrument_no],
+					sell_entry_prices[instrument_no]
+				))
+			)
+
+			ax.set_title(f"INSTRUMENT #{instrument_no} entries")
+			ax.relim()             # recalculate limits
+			ax.autoscale_view()    # rescale view
+			fig.canvas.draw_idle()
+
+		fig.canvas.mpl_connect('key_press_event', on_key)
 		plt.show()
 
 
@@ -791,7 +799,7 @@ def main() -> None:
 	)
 	backtester.show_dashboard(backtester_results,
 		params.graphs)
-
+	backtester.show_price_entries(backtester_results)
 
 if __name__ == "__main__":
 	main()
