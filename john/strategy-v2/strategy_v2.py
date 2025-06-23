@@ -5,7 +5,7 @@ import pandas as pd
 from pandas import Series
 
 positions_limit: int = 10000
-allocated_instruments: List[int] =[4,5,20,21,23, 30,47]
+allocated_instruments: List[int] =[4,5,20,21,23,30,47]
 positions: ndarray = np.zeros(50)
 
 # CONFIG ##########################################################################################
@@ -122,7 +122,7 @@ def ema_crossover(prices_so_far: ndarray, instrument_no: int) -> int:
 
 
 # MAIN STRATEGY FUNCTION ##########################################################################
-def get_johns_position(prices_so_far: ndarray) -> ndarray:
+def get_johns_positions(prices_so_far: ndarray) -> ndarray:
     for instrument_no in allocated_instruments:
         if config[instrument_no]["strategy"] == "donchian breakout":
             positions[instrument_no] = donchian_breakout(prices_so_far, instrument_no)

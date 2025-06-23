@@ -1,5 +1,7 @@
 # SIG x UNSW Algothon 2025
 
+![](results.png)
+
 This repository contains our strategy implementations for the algothon. You can pull this 
 project onto your local machine by creating a new folder, opening a terminal on that folder and 
 type in the following commands

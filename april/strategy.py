@@ -31,7 +31,7 @@ LOOKBACK_DAYS = 90
 Z_ENTRY_THRESHOLD = 0.17 # Z-score level to enter a trade
 POSITION_SIZE = 10000
 
-def get_aprils_positions(prcSoFar):
+def get_aprils_positions(prcSoFar, johns_trades):
     """
     Calculates the desired position for each instrument based on a rolling pairs trading strategy.
     
@@ -71,15 +71,24 @@ def get_aprils_positions(prcSoFar):
 
             # Position sizing to get integer number of shares
             position_asset1 = POSITION_SIZE / current_price_asset1
+
+            # Readjust for john's trades
+            if johns_trades[asset1_idx] != 0: position_asset1 = johns_trades[asset1_idx]
             
             # If z-score is high, we want a short position on the spread
             if z_score > Z_ENTRY_THRESHOLD:
                 final_positions[int(asset1_idx)] = -position_asset1
                 final_positions[int(asset2_idx)] = position_asset1 * hedge_ratio
+
+                # Readjust for john's trades
+                if johns_trades[asset2_idx] != 0: final_positions[asset2_idx] = 0
             
             # If the z-score is low, we want a long position on the spread
             elif z_score < -Z_ENTRY_THRESHOLD:
                 final_positions[int(asset1_idx)] = position_asset1
                 final_positions[int(asset2_idx)] = -position_asset1 * hedge_ratio
+
+                # Readjust for john's trades
+                if johns_trades[asset2_idx] != 0: final_positions[asset2_idx] = 0
                 
     return final_positions.astype(int)
