@@ -50,7 +50,7 @@ def get_johns_position(prices_so_far: ndarray, config: Dict[int, Dict[str, Dict[
     # FOR PRODUCTION
     else:
         # FOR PRODUCTION
-        with open("./john/strategy_v1_config.json", "r") as config_file:
+        with open("./john/strategy-v1/strategy_v1_config.json", "r") as config_file:
             config: Dict[int, Dict[str, Dict[str, float]]] = json.load(config_file)
 
             for instrument_no in allocated_instruments:

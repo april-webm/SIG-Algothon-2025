@@ -13,12 +13,12 @@
       "best_value": 105
     },
     "volatility_target": {
-      "current_value": 2.0,
-      "best_value": 0.25
+      "current_value": 0.02,
+      "best_value": 0.0025
     },
     "volatility_lookback": {
       "current_value": 252,
-      "best_value": 5
+      "best_value": 30
     }
   },
   "1": {
@@ -35,12 +35,12 @@
       "best_value": 68
     },
     "volatility_target": {
-      "current_value": 2.0,
-      "best_value": 0.25
+      "current_value": 0.02,
+      "best_value": 0.01
     },
     "volatility_lookback": {
       "current_value": 252,
-      "best_value": 5
+      "best_value": 10
     }
   },
   "2": {
@@ -57,12 +57,12 @@
       "best_value": 164
     },
     "volatility_target": {
-      "current_value": 2.0,
-      "best_value": 0.25
+      "current_value": 0.02,
+      "best_value": 0.01
     },
     "volatility_lookback": {
       "current_value": 252,
-      "best_value": 5
+      "best_value": 30
     }
   },
   "3": {
@@ -79,8 +79,8 @@
       "best_value": 195
     },
     "volatility_target": {
-      "current_value": 2.0,
-      "best_value": 0.25
+      "current_value": 0.02,
+      "best_value": 0.005
     },
     "volatility_lookback": {
       "current_value": 252,
@@ -101,8 +101,8 @@
       "best_value": 96
     },
     "volatility_target": {
-      "current_value": 2.0,
-      "best_value": 0.25
+      "current_value": 0.02,
+      "best_value": 0.02
     },
     "volatility_lookback": {
       "current_value": 252,
@@ -123,12 +123,12 @@
       "best_value": 157
     },
     "volatility_target": {
-      "current_value": 2.0,
-      "best_value": 0.25
+      "current_value": 0.02,
+      "best_value": 0.02
     },
     "volatility_lookback": {
       "current_value": 252,
-      "best_value": 5
+      "best_value": 252
     }
   },
   "6": {
@@ -145,8 +145,8 @@
       "best_value": 200
     },
     "volatility_target": {
-      "current_value": 2.0,
-      "best_value": 0.25
+      "current_value": 0.02,
+      "best_value": 0.0025
     },
     "volatility_lookback": {
       "current_value": 252,
@@ -167,8 +167,8 @@
       "best_value": 200
     },
     "volatility_target": {
-      "current_value": 2.0,
-      "best_value": 0.25
+      "current_value": 0.02,
+      "best_value": 0.0125
     },
     "volatility_lookback": {
       "current_value": 252,
@@ -189,8 +189,8 @@
       "best_value": 155
     },
     "volatility_target": {
-      "current_value": 2.0,
-      "best_value": 0.25
+      "current_value": 0.02,
+      "best_value": 0.02
     },
     "volatility_lookback": {
       "current_value": 252,
@@ -211,8 +211,8 @@
       "best_value": 137
     },
     "volatility_target": {
-      "current_value": 2.0,
-      "best_value": 0.25
+      "current_value": 0.02,
+      "best_value": 0.0025
     },
     "volatility_lookback": {
       "current_value": 252,
@@ -233,12 +233,12 @@
       "best_value": 118
     },
     "volatility_target": {
-      "current_value": 2.0,
-      "best_value": 0.25
+      "current_value": 0.02,
+      "best_value": 0.01
     },
     "volatility_lookback": {
       "current_value": 252,
-      "best_value": 5
+      "best_value": 30
     }
   },
   "26": {
@@ -255,8 +255,8 @@
       "best_value": 50
     },
     "volatility_target": {
-      "current_value": 2.0,
-      "best_value": 0.25
+      "current_value": 0.02,
+      "best_value": 0.0025
     },
     "volatility_lookback": {
       "current_value": 252,
@@ -277,12 +277,12 @@
       "best_value": 50
     },
     "volatility_target": {
-      "current_value": 2.0,
-      "best_value": 0.25
+      "current_value": 0.02,
+      "best_value": 0.02
     },
     "volatility_lookback": {
       "current_value": 252,
-      "best_value": 5
+      "best_value": 21
     }
   }
 }
