@@ -28,7 +28,7 @@ STATIC_PAIRS = [
 
 # CONSTANTS
 LOOKBACK_DAYS = 90    
-Z_ENTRY_THRESHOLD = 0.22 # Z-score level to enter a trade
+Z_ENTRY_THRESHOLD = 0.17 # Z-score level to enter a trade
 POSITION_SIZE = 10000
 
 def get_aprils_positions(prcSoFar):
