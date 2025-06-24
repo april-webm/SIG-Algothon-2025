@@ -70,6 +70,7 @@ CMD_LINE_OPTIONS: List[str] = [
 	"--disable-comms",
 	"--show",
 ]
+
 GRAPH_OPTIONS: List[str] = [
 	"daily-pnl",
 	"cum-pnl",
@@ -691,10 +692,16 @@ class Backtester:
 		plt.show()
 
 	def show_price_entries(self, backtester_results: BacktesterResults) -> None:
+		"""
+		Generates a graph that shows the trades that were made on each instrument.
+		:param backtester_results: Results of a backtester
+		:return: None
+		"""
 		# Get Price Data
-		prices_list: List[ndarray]= [
+		prices_list: List[ndarray] = [
 			self.price_history[instrument_no][backtester_results["start_day"] - 1:
-			  backtester_results["end_day"]] for instrument_no in range(0,50)
+											  backtester_results["end_day"]] for instrument_no in
+			range(0, 50)
 		]
 		prices: ndarray = np.array(prices_list)
 
@@ -704,15 +711,15 @@ class Backtester:
 
 		# Get buys and sells
 		instrument_trades: List[List[Trade]] = [
-			backtester_results["trades"][instrument_no] for instrument_no in range(0,50)
+			backtester_results["trades"][instrument_no] for instrument_no in range(0, 50)
 		]
 
-		buy_entry_prices: List[List[float]] = [[] for i in range(0,50)]
-		buy_entry_days: List[List[int]] = [[] for i in range(0,50)]
-		sell_entry_prices: List[List[float]] = [[] for i in range(0,50)]
-		sell_entry_days: List[List[int]] = [[] for i in range(0,50)]
+		buy_entry_prices: List[List[float]] = [[] for i in range(0, 50)]
+		buy_entry_days: List[List[int]] = [[] for i in range(0, 50)]
+		sell_entry_prices: List[List[float]] = [[] for i in range(0, 50)]
+		sell_entry_days: List[List[int]] = [[] for i in range(0, 50)]
 
-		for instrument_no in range(0,50):
+		for instrument_no in range(0, 50):
 			for trade in instrument_trades[instrument_no]:
 				if trade["order_type"] == "buy":
 					buy_entry_prices[instrument_no].append(trade["price_entry"])
@@ -722,19 +729,23 @@ class Backtester:
 					sell_entry_days[instrument_no].append(trade["day"])
 
 		# Plot each instrument's price and entries
-		fig, ax = plt.subplots(figsize=(14,6))
+		fig, ax = plt.subplots(figsize=(14, 6))
 		instrument_no = 0
 
 		# Plot Price
 		line, = ax.plot(
 			days,
 			prices[instrument_no],
-			label=f"Price of Instrument {instrument_no}",
 			color="blue",
 			linestyle="--",
 			linewidth=2,
-			zorder=1
+			label="Instrument Price",
+			zorder=1,
 		)
+		ax.set_xlabel("Days", fontsize=10)
+		ax.set_ylabel("Price ($)", fontsize=10)
+		ax.spines["top"].set_visible(False)
+		ax.spines["right"].set_visible(False)
 
 		# Plot entries
 		buy_scatter = ax.scatter(buy_entry_days[instrument_no],
@@ -752,8 +763,9 @@ class Backtester:
 			label="Short Entry",
 			zorder=3)
 
-		ax.set_title(f"INSTRUMENT #{instrument_no} entries")
+		ax.set_title(f"Instrument #{instrument_no} Buys/Sells")
 
+		# Event handler for switching between plots
 		def on_key(event):
 			nonlocal instrument_no
 			if event.key == 'right':
@@ -780,12 +792,14 @@ class Backtester:
 				))
 			)
 
-			ax.set_title(f"INSTRUMENT #{instrument_no} entries")
-			ax.relim()             # recalculate limits
-			ax.autoscale_view()    # rescale view
+			ax.set_title(f"Instrument #{instrument_no} Buys/Sells")
+			ax.relim()
+			ax.autoscale_view()
 			fig.canvas.draw_idle()
 
 		fig.canvas.mpl_connect('key_press_event', on_key)
+		plt.legend()
+		plt.grid(True, alpha=0.7)
 		plt.show()
 
 
@@ -800,6 +814,7 @@ def main() -> None:
 	backtester.show_dashboard(backtester_results,
 		params.graphs)
 	backtester.show_price_entries(backtester_results)
+
 
 if __name__ == "__main__":
 	main()
