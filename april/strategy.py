@@ -23,6 +23,7 @@ STATIC_PAIRS = [
     {'pair': (12, 13), 'hedge_ratio': 1.077101},
     {'pair': (1, 33), 'hedge_ratio': 1.899301}
 ]
+
 # --- CONSTANTS ---
 LOOKBACK_DAYS = 85
 Z_ENTRY_THRESHOLD = 0.08
@@ -52,18 +53,22 @@ def get_aprils_positions(prcSoFar):
             
             current_price_asset1 = prcSoFar[int(asset1_idx), -1]
             position_asset1 = POSITION_SIZE / current_price_asset1
+
+            # Readjust for john's trades
+            if johns_trades[asset1_idx] != 0: position_asset1 = johns_trades[asset1_idx]
             
             
             # 2. If not stopped out, check for a normal entry signal.
             if z_score > Z_ENTRY_THRESHOLD:
                 final_positions[int(asset1_idx)] = -position_asset1
                 final_positions[int(asset2_idx)] = position_asset1 * hedge_ratio
+
+                # Readjust for john's trades
+                if johns_trades[asset2_idx] != 0: final_positions[asset2_idx] = 0
             
             elif z_score < -Z_ENTRY_THRESHOLD:
                 final_positions[int(asset1_idx)] = position_asset1
                 final_positions[int(asset2_idx)] = -position_asset1 * hedge_ratio
-            
             # 3. If the z-score is between the entry thresholds, our desired position is also zero.
             # The backtester will automatically flatten any open trades.
-            
     return final_positions.astype(int)

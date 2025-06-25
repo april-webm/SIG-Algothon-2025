@@ -5,7 +5,7 @@ import pandas as pd
 from pandas import Series
 
 positions_limit: int = 10000
-allocated_instruments: List[int] =[4,5,21,23, 30,47]
+allocated_instruments: List[int] =[4,5,20,21,23,30,47]
 positions: ndarray = np.zeros(50)
 
 # CONFIG ##########################################################################################
@@ -17,6 +17,10 @@ config: Dict[int, Dict[str, int | float]] = {
     5: {
         "strategy": "donchian breakout",
         "db_lookback": 50
+    },
+    20: {
+        "strategy": "donchian breakout",
+        "db_lookback": 157
     },
     21: {
         "strategy": "donchian breakout",
@@ -91,9 +95,9 @@ def ema_crossover(prices_so_far: ndarray, instrument_no: int) -> int:
 
     # Get fast MA and slow MA
     fast_ema: float = instrument_price_history.ewm(span=fast_ema_lookback, adjust=False).mean(
-    ).iloc[-1]
+        ).iloc[-1]
     slow_ema: float = instrument_price_history.ewm(span=slow_ema_lookback, adjust=False).mean(
-    ).iloc[-1]
+        ).iloc[-1]
 
     # Get a signal
     last_signal: int = last_signals[instrument_no]
