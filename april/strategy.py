@@ -92,7 +92,7 @@ def get_aprils_positions(prcSoFar: np.ndarray) -> np.ndarray:
         
         current_spread = prcSoFar[asset1_idx, -1] - hedge_ratio * prcSoFar[asset2_idx, -1]
         z_score = (current_spread - np.mean(spread_series)) / np.std(spread_series)
-
+        
         # --- Stateful Trading Logic (with Stop-Loss) ---
         pair_key = str(pair)
         current_pos_state = PAIR_POSITION_STATE.get(pair_key, 0)
@@ -116,3 +116,4 @@ def get_aprils_positions(prcSoFar: np.ndarray) -> np.ndarray:
             final_positions[asset2_idx] += pos_asset2
             
     return final_positions.astype(int)
+

@@ -151,8 +151,4 @@ def donchian_breakout(prices_so_far: ndarray, instrument_no: int) -> int:
 positions: ndarray = np.zeros(50)
 
 def get_johns_positions(prices_so_far: ndarray) -> ndarray:
-    for instrument_no in allocated_instruments:
-        if config[instrument_no]["strategy"] == "donchian breakout":
-            positions[instrument_no] = donchian_breakout(prices_so_far, instrument_no)
-
-    return positions
+    return np.zeros(50)
