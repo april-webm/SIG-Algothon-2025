@@ -1,5 +1,3 @@
-# strategy.py (Final Version with Dual Parameter Sets)
-
 import numpy as np
 import statsmodels.api as sm
 import sys
@@ -21,10 +19,6 @@ except ImportError:
     print("ERROR: initial_static_ratios.py not found. Please run info_static.py first.")
     INITIAL_STATIC_RATIOS = []
 
-# ==============================================================================
-# SECTION 1: DUAL PARAMETER SETS
-# ==============================================================================
-
 # These parameters were optimized for the STATIC hedge ratio period (Days ~90-500)
 STATIC_PARAMS = {
     "ZSCORE_LOOKBACK": 130,
@@ -32,27 +26,25 @@ STATIC_PARAMS = {
     "STOP_LOSS_THRESHOLD": 3.75,
 }
 
-# These parameters should be the best you found for the ADAPTIVE period (Days 501-750)
+# These parameters should be the best found for the opening window (Days 501+)
 ADAPTIVE_PARAMS = {
     "ZSCORE_LOOKBACK": 110,
-    "ENTRY_THRESHOLD": 0.8, # Example value, update with your best result
-    "STOP_LOSS_THRESHOLD": 3.5,  # Example value, update with your best result
+    "ENTRY_THRESHOLD": 0.8,
+    "STOP_LOSS_THRESHOLD": 3.5,  
 }
 
 # --- GLOBAL STRATEGY SETTINGS ---
-ADAPTIVE_START_DAY = 501       # Day to switch to expanding window HR and ADAPTIVE_PARAMS
-POSITION_SIZE = 10000          # Dollar value for the primary asset in a pair
+ADAPTIVE_START_DAY = 501       # Day to switch to expanding window HR
+POSITION_SIZE = 10000          
 
 # --- STATE MANAGEMENT ---
 # A single state dictionary tracks positions across both periods
 PAIR_POSITION_STATE = {str(info['pair']): 0 for info in INITIAL_STATIC_RATIOS}
 
-# ==============================================================================
-# SECTION 2: FINAL STRATEGY FUNCTION
-# ==============================================================================
+
 def get_aprils_positions(prcSoFar: np.ndarray) -> np.ndarray:
     """
-    Implements a hybrid pairs trading strategy that uses different optimized
+    Implements hybrid pairs trading strategy using different optimized
     parameters for the static and adaptive trading periods.
     """
     global PAIR_POSITION_STATE
@@ -74,11 +66,11 @@ def get_aprils_positions(prcSoFar: np.ndarray) -> np.ndarray:
         pair = pair_info['pair']
         asset1_idx, asset2_idx = pair
 
-        # --- Hedge Ratio Selection Logic ---
+        # Hedge ratio selection
         if current_day < ADAPTIVE_START_DAY:
             hedge_ratio = pair_info['static_hedge_ratio']
         else:
-            # Use the robust expanding window calculation
+            # Use expanding window calculation
             regression_window = prcSoFar[:, :current_day]
             y = regression_window[asset1_idx, :]
             x = regression_window[asset2_idx, :]
