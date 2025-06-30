@@ -215,7 +215,7 @@ class RollingAlgo:
             out[t] = self.get_positions(hist)
         return out
 
-def getMyPosition(prcHistSoFar: np.ndarray) -> np.ndarray:
+def get_williams_positions(prcHistSoFar: np.ndarray) -> np.ndarray:
     algo = RollingAlgo(prcHistSoFar)
     window = pd.DataFrame(prcHistSoFar[:, -TRAIN_DAYS:])
     train = window.iloc[:, :TRAIN_SIZE]
