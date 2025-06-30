@@ -1,0 +1,304 @@
+import hashlib
+import numpy as np
+import pandas as pd
+from collections import deque
+from concurrent.futures import ThreadPoolExecutor
+from typing import Dict, List, Union
+from math import sqrt, erf
+
+# ==== PARAMETERS ====
+PRICES_FILE       = "prices.txt"
+TRAIN_DAYS        = 520
+TRAIN_SIZE        = 400
+DLR_POS_LIMIT     = 10_000
+COMM_RATE         = 0.0005
+TF_FAST           = 10
+TF_SLOW           = 20
+BOLL_LOOKBACK     = 20
+BOLL_WIDTH        = 2
+RSI_PERIOD        = 14
+MOM_LOOKBACK      = 5
+ADAPTIVE_RSI_LEN  = 252
+MIN_RETRAIN_PVAL  = 0.05
+
+# Strategy weightings (tunable)
+SIGNAL_WEIGHTS = {
+    'meanrev': 1.0,
+    'trend':   1.0,
+    'boll':    1.0,
+    'xover':   1.0,
+    'rsi':     1.0,
+    'simple':  1.0,
+    'mom':     1.0,
+}
+
+# ==== ASSET GROUPS ====
+def make_groups():
+    ALL = set(range(50))
+    MR = {43,8,13,41,31,21,24,32,7,23,3,49,35,25,40,5,11,44,14,48,39,9,19,38,12,28,15,42,33}
+    TR = {26,6,29,16,4,30,36,17,18}
+    BB = {2,27,46,34,20,47,10,22,1}
+    XO = 0
+    RS = 45
+    SI = {37,35}
+    MO = ALL - MR - TR - BB - {XO} - {RS} - SI
+    return MR, TR, BB, XO, RS, SI, MO
+
+MEANREV_ASSETS, POSITIVE_TREND, GOOD_BOLL, XOVER_ASSET, RSI_ASSET, SIMPLE_ASSETS, MOM_ASSETS = make_groups()
+
+# ==== HELPERS ====
+def compute_sharpe(returns: pd.Series) -> float:
+    m, s = returns.mean(), returns.std(ddof=0)
+    return (m/s)*sqrt(252) if s>0 else 0.0
+
+# Paired t-test for retraining decision
+def paired_ttest(x: np.ndarray, y: np.ndarray) -> float:
+    d = x - y
+    md = d.mean(); sd = d.std(ddof=1)
+    t = md / (sd/sqrt(len(d))) if sd>0 else 0.0
+    p = 2*(1 - 0.5*(1 + erf(abs(t)/sqrt(2))))
+    return p
+
+# ==== ROLLING ALGORITHM ====
+class RollingAlgo:
+    def __init__(self, prices: np.ndarray):
+        self.prices = prices
+        self.thresholds: Dict[int, float] = {}
+        self.cache_hash = ""
+        self.val_sharpes = deque(maxlen=5)
+
+    def _train_hash(self, train: pd.DataFrame) -> str:
+        mu = train.mean(axis=1); sd = train.std(axis=1, ddof=0)
+        tup = tuple(np.round(mu,6).tolist() + np.round(sd,6).tolist())
+        return hashlib.sha256(str(tup).encode()).hexdigest()
+
+    def _optimize_thresholds(self, train: pd.DataFrame):
+        h = self._train_hash(train)
+        if h == self.cache_hash and self.thresholds:
+            return
+        mu = train.mean(axis=1); sd = train.std(axis=1, ddof=0)
+        rets = train.pct_change(axis=1).shift(-1, axis=1).iloc[:, :-1]
+
+        def worker(a):
+            z = (train.loc[a] - mu[a]) / sd[a]
+            best_sh, best_t = -np.inf, 1.5
+            for t in np.arange(1.0, 2.01, 0.05):
+                sig = (z > t).astype(int)*-1 + (z < -t).astype(int)
+                pnl = (sig.shift(1) * rets.loc[a]).dropna()
+                sh = compute_sharpe(pnl)
+                if sh > best_sh:
+                    best_sh, best_t = sh, t
+            return a, best_t
+
+        out: Dict[int, float] = {}
+        with ThreadPoolExecutor() as ex:
+            futures = [ex.submit(worker, a) for a in MEANREV_ASSETS]
+            for fut in futures:
+                a, t = fut.result(); out[a] = t
+        self.thresholds = out
+        self.cache_hash = h
+
+    def _should_recompute(self, train: pd.DataFrame, valid: pd.DataFrame) -> bool:
+        mu = train.mean(axis=1); sd = train.std(axis=1, ddof=0)
+        rets_tr = train.pct_change(axis=1).shift(-1, axis=1).iloc[:, :-1]
+        rets_vl = valid.pct_change(axis=1).shift(-1, axis=1).iloc[:, :-1]
+
+        pnl_tr, pnl_vl = [], []
+        for a, t in self.thresholds.items():
+            ztr = (train.loc[a] - mu[a]) / sd[a]
+            sig_tr = (ztr > t).astype(int)*-1 + (ztr < -t).astype(int)
+            pnl_tr.append((sig_tr.shift(1) * rets_tr.loc[a]).dropna())
+
+            zv = (valid.loc[a] - mu[a]) / sd[a]
+            sig_v = (zv > t).astype(int)*-1 + (zv < -t).astype(int)
+            pnl_vl.append((sig_v.shift(1) * rets_vl.loc[a]).dropna())
+
+        arr_tr = pd.concat(pnl_tr, axis=1).sum(axis=1).to_numpy()
+        arr_vl = pd.concat(pnl_vl, axis=1).sum(axis=1).to_numpy()
+        return paired_ttest(arr_tr, arr_vl) < MIN_RETRAIN_PVAL
+
+    # --- signal modules ---
+    def _signal_meanrev(self, hist: pd.DataFrame) -> Dict[int,int]:
+        today = hist.iloc[:, -1]
+        mu, sd = hist.mean(axis=1), hist.std(axis=1, ddof=0)
+        z = (today - mu) / sd
+        return {a: -1 if z[a] > self.thresholds[a]
+                   else 1 if z[a] < -self.thresholds[a]
+                   else 0
+                for a in MEANREV_ASSETS}
+
+    def _signal_trend(self, hist: pd.DataFrame) -> Dict[int,int]:
+        today = hist.iloc[:, -1]
+        fast = hist.T.ewm(span=TF_FAST, adjust=False).mean().iloc[-1]
+        slow = hist.T.ewm(span=TF_SLOW, adjust=False).mean().iloc[-1]
+        return {a: 1 if fast[a] > slow[a] else -1 for a in POSITIVE_TREND}
+
+    def _signal_boll(self, hist: pd.DataFrame) -> Dict[int,int]:
+        today = hist.iloc[:, -1]
+        mu = hist.T.rolling(BOLL_LOOKBACK).mean().iloc[-1]
+        sd = hist.T.rolling(BOLL_LOOKBACK).std(ddof=0).iloc[-1]
+        ub, lb = mu + BOLL_WIDTH*sd, mu - BOLL_WIDTH*sd
+        mom = hist.diff(MOM_LOOKBACK).iloc[:, -1]
+        out = {}
+        for a in GOOD_BOLL:
+            if today[a] > ub[a] and mom[a] < 0:
+                out[a] = -1
+            elif today[a] < lb[a] and mom[a] > 0:
+                out[a] = 1
+            else:
+                out[a] = 0
+        return out
+
+    def _signal_xover(self, hist: pd.DataFrame) -> Dict[int,int]:
+        return self._signal_trend(hist)
+
+    def _signal_rsi(self, hist: pd.DataFrame) -> Dict[int,int]:
+        s = hist.loc[RSI_ASSET]
+        delta = s.diff()
+        gain = delta.clip(lower=0).ewm(alpha=1/RSI_PERIOD, adjust=False).mean()
+        loss = -delta.clip(upper=0).ewm(alpha=1/RSI_PERIOD, adjust=False).mean()
+        rsi = 100 - (100/(1 + (gain/loss)))
+        window = rsi.dropna().iloc[-ADAPTIVE_RSI_LEN:]
+        lo, hi = window.quantile(0.1), window.quantile(0.9)
+        val = rsi.iloc[-1]
+        return {RSI_ASSET: 1 if val < lo else (-1 if val > hi else 0)}
+
+    def _signal_simple(self, hist: pd.DataFrame) -> Dict[int,int]:
+        return {a: 1 for a in SIMPLE_ASSETS}
+
+    def _signal_mom(self, hist: pd.DataFrame) -> Dict[int,int]:
+        diff = hist.diff(MOM_LOOKBACK, axis=1).iloc[:, -1]
+        return {a: 1 if diff[a] > 0 else -1 for a in MOM_ASSETS}
+
+            # --- combine & size ---
+    def get_positions(self, hist: pd.DataFrame) -> np.ndarray:
+        n_assets = hist.shape[0]
+        # gather signals
+        sig_dicts = {
+            'meanrev': self._signal_meanrev(hist),
+            'trend':   self._signal_trend(hist),
+            'boll':    self._signal_boll(hist),
+            'xover':   self._signal_xover(hist),
+            'rsi':     self._signal_rsi(hist),
+            'simple':  self._signal_simple(hist),
+            'mom':     self._signal_mom(hist),
+        }
+        outsig = np.zeros(n_assets)
+        for name, sdct in sig_dicts.items():
+            w = SIGNAL_WEIGHTS.get(name, 1.0)
+            vec = np.zeros(n_assets)
+            for a, v in sdct.items():
+                vec[a] = v
+            outsig += w * vec
+
+        # risk-based sizing
+        today = hist.iloc[:, -1].to_numpy()
+        total_cap = DLR_POS_LIMIT * n_assets * (1 - COMM_RATE)
+        vol = hist.pct_change(axis=1).std(axis=1, ddof=0).to_numpy()
+        inv_vol = np.where(vol > 0, 1.0/vol, 0.0)
+        wts = inv_vol / inv_vol.sum()
+        caps = total_cap * wts
+        positions = np.floor((caps / today) * np.sign(outsig)).astype(int)
+        return positions
+
+    def run(self) -> np.ndarray:
+        n_days, n_inst = self.prices.T.shape
+        out = np.zeros((n_days, n_inst), dtype=int)
+        for t in range(TRAIN_DAYS, n_days):
+            window = pd.DataFrame(self.prices[:, t-TRAIN_DAYS:t])
+            train  = window.iloc[:, :TRAIN_SIZE]
+            valid  = window.iloc[:, TRAIN_SIZE:]
+            self._optimize_thresholds(train)
+            if self._should_recompute(train, valid):
+                self._optimize_thresholds(train)
+            hist = pd.DataFrame(self.prices[:, :t+1])
+            out[t] = self.get_positions(hist)
+        return out
+
+def getMyPosition(prcHistSoFar: np.ndarray) -> np.ndarray:
+    algo = RollingAlgo(prcHistSoFar)
+    window = pd.DataFrame(prcHistSoFar[:, -TRAIN_DAYS:])
+    train = window.iloc[:, :TRAIN_SIZE]
+    algo._optimize_thresholds(train)
+    hist = pd.DataFrame(prcHistSoFar)
+    return algo.get_positions(hist)
+
+def get_permutation(
+    ohlc: Union[pd.DataFrame, List[pd.DataFrame]],
+    start_index: int = 0,
+    seed=None) -> Union[pd.DataFrame, List[pd.DataFrame]]:
+    """
+    Permute intraday OHLC bars across one or multiple instruments.
+    """
+    assert start_index >= 0
+    np.random.seed(seed)
+
+    # Normalize to list
+    single = False
+    if isinstance(ohlc, list):
+        time_index = ohlc[0].index
+        for mkt in ohlc:
+            assert np.all(time_index == mkt.index), "Indexes do not match"
+        data = ohlc
+    else:
+        time_index = ohlc.index
+        data = [ohlc]
+        single = True
+
+    n_markets = len(data)
+    n_bars = len(data[0])
+    perm_index = start_index + 1
+    perm_n = n_bars - perm_index
+
+    # Containers
+    start_bar = np.zeros((n_markets, 4))
+    rel_o = np.zeros((n_markets, perm_n))
+    rel_h = np.zeros((n_markets, perm_n))
+    rel_l = np.zeros((n_markets, perm_n))
+    rel_c = np.zeros((n_markets, perm_n))
+
+    # Calculate log-relative components
+    for i, df in enumerate(data):
+        logb = np.log(df[['open','high','low','close']])
+        start_bar[i] = logb.iloc[start_index].to_numpy()
+        o = logb['open'] - logb['close'].shift()
+        h = logb['high'] - logb['open']
+        l = logb['low']  - logb['open']
+        c = logb['close']- logb['open']
+        rel_o[i] = o.to_numpy()[perm_index:]
+        rel_h[i] = h.to_numpy()[perm_index:]
+        rel_l[i] = l.to_numpy()[perm_index:]
+        rel_c[i] = c.to_numpy()[perm_index:]
+
+    idx = np.arange(perm_n)
+    # Shuffle HLC together
+    perm_hlc = np.random.permutation(idx)
+    rel_h = rel_h[:, perm_hlc]
+    rel_l = rel_l[:, perm_hlc]
+    rel_c = rel_c[:, perm_hlc]
+    # Shuffle open gaps separately
+    perm_o = np.random.permutation(idx)
+    rel_o = rel_o[:, perm_o]
+
+    # Build permuted bars
+    permuted = []
+    for i, df in enumerate(data):
+        perm = np.zeros((n_bars,4))
+        logb = np.log(df[['open','high','low','close']]).to_numpy()
+        perm[:start_index] = logb[:start_index]
+        perm[start_index] = start_bar[i]
+        for j in range(perm_index, n_bars):
+            k = j - perm_index
+            prev_close = perm[j-1,3]
+            perm[j,0] = prev_close + rel_o[i,k]
+            perm[j,1] = perm[j,0]   + rel_h[i,k]
+            perm[j,2] = perm[j,0]   + rel_l[i,k]
+            perm[j,3] = perm[j,0]   + rel_c[i,k]
+        df_perm = pd.DataFrame(
+            np.exp(perm),
+            index=time_index,
+            columns=['open','high','low','close']
+        )
+        permuted.append(df_perm)
+
+    return permuted if not single else permuted[0]
