@@ -543,7 +543,7 @@ class Backtester:
 		for day in range(start_day,
 			end_day + 1):
 			# Get the prices so far
-			prices_so_far: ndarray = self.price_history[:, start_day - 1: day]
+			prices_so_far: ndarray = self.price_history[:,: day]
 
 			# Get desired positions from strategy
 			if config is not None and instruments_to_test is not None:
