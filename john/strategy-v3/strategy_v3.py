@@ -7,7 +7,7 @@ from pandas import Series
 
 # CONSTANTS AND CONFIG ############################################################################
 positions_limit: int = 10000
-allocated_instruments: List[int] = [6, 10, 14, 16, 17, 20, 28, 32, 36, 39]
+allocated_instruments: List[int] = list(range(0, 50))
 
 last_signals: Dict[int, float] = {
 	instrument_no: 0.0 for instrument_no in allocated_instruments
@@ -27,55 +27,225 @@ last_trade_adjustment_params: Dict[int, Dict[str, float]] = {
 }
 
 config: Dict[int, Dict[str, int | float | str]] = {
-	6: {
+	1: {
 		"strategy": "donchian breakout",
 		"db type": "last loser",
-		"db lookback": 54
+		"db lookback": 15
+	},
+	2: {
+		"strategy": "donchian breakout",
+		"db type": "last loser",
+		"db lookback": 89
+	},
+	3: {
+		"strategy": "donchian breakout",
+		"db type": "last loser",
+		"db lookback": 15
+	},
+	4: {
+		"strategy": "donchian breakout",
+		"db type": "last loser",
+		"db lookback": 35
+	},
+	5: {
+		"strategy": "donchian breakout",
+		"db type": "last winner",
+		"db lookback": 50
+	},
+	6: {
+		"strategy": "donchian breakout",
+		"db type": "all trades",
+		"db lookback": 151
+	},
+	7: {
+		"strategy": "donchian breakout",
+		"db type": "last loser",
+		"db lookback": 21
+	},
+	9: {
+		"strategy": "donchian breakout",
+		"db type": "last loser",
+		"db lookback": 13
 	},
 	10: {
 		"strategy": "donchian breakout",
 		"db type": "last loser",
-		"db lookback": 99
+		"db lookback": 37
 	},
-	14: {
-		"strategy": "donchian breakout",
-		"db type": "last winner",
-		"db lookback": 146
-	},
-	16: {
-		"strategy": "donchian breakout",
-		"db type": "last winner",
-		"db lookback": 24
-	},
-	17: {
+	11: {
 		"strategy": "donchian breakout",
 		"db type": "last winner",
 		"db lookback": 12
 	},
+	12: {
+		"strategy": "donchian breakout",
+		"db type": "last loser",
+		"db lookback": 35
+	},
+	13: {
+		"strategy": "donchian breakout",
+		"db type": "last winner",
+		"db lookback": 20
+	},
+	14: {
+		"strategy": "donchian breakout",
+		"db type": "last winner",
+		"db lookback": 12
+	},
+	16: {
+		"strategy": "donchian breakout",
+		"db type": "last loser",
+		"db lookback": 18
+	},
+	17: {
+		"strategy": "donchian breakout",
+		"db type": "last loser",
+		"db lookback": 24
+	},
+	18: {
+		"strategy": "donchian breakout",
+		"db type": "last winner",
+		"db lookback": 24
+	},
 	20: {
 		"strategy": "donchian breakout",
 		"db type": "last loser",
-		"db lookback": 123
+		"db lookback": 39
+	},
+	21: {
+		"strategy": "donchian breakout",
+		"db type": "all trades",
+		"db lookback": 84
+	},
+	22: {
+		"strategy": "donchian breakout",
+		"db type": "last loser",
+		"db lookback": 34
+	},
+	23: {
+		"strategy": "donchian breakout",
+		"db type": "all trades",
+		"db lookback": 109
+	},
+	24: {
+		"strategy": "donchian breakout",
+		"db type": "last winner",
+		"db lookback": 12
+	},
+	25: {
+		"strategy": "donchian breakout",
+		"db type": "last winner",
+		"db lookback": 77
+	},
+	26: {
+		"strategy": "donchian breakout",
+		"db type": "last winner",
+		"db lookback": 16
+	},
+	27: {
+		"strategy": "donchian breakout",
+		"db type": "last loser",
+		"db lookback": 13
 	},
 	28: {
 		"strategy": "donchian breakout",
 		"db type": "last winner",
-		"db lookback": 23
+		"db lookback": 24
+	},
+	29: {
+		"strategy": "donchian breakout",
+		"db type": "all trades",
+		"db lookback": 153
+	},
+	30: {
+		"strategy": "donchian breakout",
+		"db type": "all trades",
+		"db lookback": 133
+	},
+	31: {
+		"strategy": "donchian breakout",
+		"db type": "last loser",
+		"db lookback": 39
 	},
 	32: {
 		"strategy": "donchian breakout",
 		"db type": "last loser",
 		"db lookback": 16
 	},
-	36: {
+	33: {
+		"strategy": "donchian breakout",
+		"db type": "last loser",
+		"db lookback": 12
+	},
+	34: {
 		"strategy": "donchian breakout",
 		"db type": "last winner",
+		"db lookback": 42
+	},
+	35: {
+		"strategy": "donchian breakout",
+		"db type": "all trades",
+		"db lookback": 136
+	},
+	36: {
+		"strategy": "donchian breakout",
+		"db type": "last loser",
 		"db lookback": 12
+	},
+	37: {
+		"strategy": "donchian breakout",
+		"db type": "last loser",
+		"db lookback": 26
+	},
+	38: {
+		"strategy": "donchian breakout",
+		"db type": "last winner",
+		"db lookback": 18
 	},
 	39: {
 		"strategy": "donchian breakout",
 		"db type": "last winner",
+		"db lookback": 56
+	},
+	40: {
+		"strategy": "donchian breakout",
+		"db type": "last winner",
+		"db lookback": 21
+	},
+	41: {
+		"strategy": "donchian breakout",
+		"db type": "last winner",
+		"db lookback": 18
+	},
+	42: {
+		"strategy": "donchian breakout",
+		"db type": "last loser",
+		"db lookback": 65
+	},
+	43: {
+		"strategy": "donchian breakout",
+		"db type": "last winner",
+		"db lookback": 31
+	},
+	44: {
+		"strategy": "donchian breakout",
+		"db type": "last winner",
+		"db lookback": 12
+	},
+	46: {
+		"strategy": "donchian breakout",
+		"db type": "last winner",
+		"db lookback": 39
+	},
+	47: {
+		"strategy": "donchian breakout",
+		"db type": "last loser",
 		"db lookback": 13
+	},
+	49: {
+		"strategy": "donchian breakout",
+		"db type": "last winner",
+		"db lookback": 12
 	},
 }
 
@@ -152,6 +322,8 @@ positions: ndarray = np.zeros(50)
 
 def get_johns_positions(prices_so_far: ndarray) -> ndarray:
 	for instrument_no in allocated_instruments:
+		if instrument_no not in config.keys(): continue
+
 		if config[instrument_no]["strategy"] == "donchian breakout":
 			positions[instrument_no] = donchian_breakout(prices_so_far, instrument_no)
 

@@ -66,6 +66,44 @@ is_zero_uptrend: Dict[int, bool] = {
 	49: False,
 }
 
+def plot_price_and_regime(instrument_price: ndarray, predicted_regimes: ndarray, instrument_no: int)-> None:
+	dates: Series = pd.Series(instrument_price).index
+	prices: Series = pd.Series(instrument_price)
+	regimes: Series = pd.Series(predicted_regimes)
+	regime_states: Dict[int, str] = {0: "Uptrend", 1: "Downtrend"}
+
+	# Price plot
+	# build a DataFrame to detect regime‐change segments
+	df = pd.DataFrame({'price': prices, 'regime': regimes}, index=dates)
+	# each time regime != previous, start a new segment
+	df['segment'] = (df['regime'] != df['regime'].shift()).cumsum()
+
+	fig, (ax_price, ax_regime) = plt.subplots(
+		nrows=2, ncols=1, sharex=True, figsize=(16, 4),
+		gridspec_kw={'height_ratios': [3, 1]}
+	)
+
+	# plot each segment in its color
+	for _, seg in df.groupby('segment'):
+		color = "red" if seg['regime'].iloc[0] == 1 else "green"
+		ax_price.plot(seg.index, seg['price'], color=color, lw=1.5)
+
+	ax_price.set_title(f"Instrument {instrument_no} Price and Regime")
+	ax_price.set_ylabel("Price")
+	ax_price.grid(alpha=0.3)
+
+	# regime step‐plot
+	ax_regime.step(df.index, df['regime'], where='post')
+	ax_regime.set_ylabel("Regime")
+	ax_regime.set_yticks(list(regime_states.keys()))
+	ax_regime.set_yticklabels([regime_states[k] for k in regime_states])
+	ax_regime.set_ylim(-0.1, len(regime_states) - 0.9)
+	ax_regime.grid(alpha=0.3)
+
+	ax_regime.set_xlabel('Date')
+	fig.autofmt_xdate()
+	plt.tight_layout()
+	plt.show()
 
 def apply_model(instrument_no: int, prices_so_far: ndarray) -> ndarray:
 	# Load results
@@ -93,20 +131,26 @@ def apply_model(instrument_no: int, prices_so_far: ndarray) -> ndarray:
 
 def get_signal(predicted_regimes: ndarray, instrument_no: int, prices_so_far: ndarray) -> (
 	int):
+	last_regime: int = -1
+	# Check first if last 4 regimes have been the same, if not return old signal
+	if (predicted_regimes[-1] == predicted_regimes[-2]):
+		last_regime = predicted_regimes[-1]
+	else:
+		return last_signal[instrument_no]
+
 	# Return a signal that corresponds with the classified regime
-	if is_zero_uptrend[instrument_no] and predicted_regimes[-1] == 0:
+	if is_zero_uptrend[instrument_no] and last_regime == 0:
 		return 1
-	elif is_zero_uptrend[instrument_no] and predicted_regimes[-1] == 1:
+	elif is_zero_uptrend[instrument_no] and last_regime == 1:
 		return -1
-	elif not is_zero_uptrend[instrument_no] and predicted_regimes[-1] == 0:
+	elif not is_zero_uptrend[instrument_no] and last_regime == 0:
 		return -1
 	else:
 		return 1
 
 
 def get_johns_positions(prices_so_far: ndarray) -> ndarray:
-	print(f"Day {len(prices_so_far[0])}")
-	if len(prices_so_far[0]) < 3: return positions
+	if len(prices_so_far[0]) < 6: return positions
 
 	if len(prices_so_far[0]) == 550:
 		return np.zeros(50)
@@ -114,6 +158,9 @@ def get_johns_positions(prices_so_far: ndarray) -> ndarray:
 	for instrument_no in instrument_nos:
 		predicted_regimes: ndarray = apply_model(instrument_no, prices_so_far)
 		signal: int = get_signal(predicted_regimes,instrument_no, prices_so_far)
+
+		if instrument_no == 0 and len(prices_so_far[0]) == 549:
+			plot_price_and_regime(prices_so_far[0], predicted_regimes, 0)
 
 		# Generate positions - if new signal is different to last signal, create new trade.
 		# Otherwise just leave it
