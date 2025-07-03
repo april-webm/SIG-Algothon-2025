@@ -505,9 +505,12 @@ def grid_search(price_history: ndarray, grid_search_lookback: int) -> None:
 
 	# Adjust config based on best params
 	for instrument_no in allocated_instruments:
-		config[instrument_no]["strategy"] = "donchian breakout"
-		config[instrument_no]["db lookback"] = best_params[instrument_no]["lookback"]
-		config[instrument_no]["db type"] = best_params[instrument_no]["db_type"]
+		if best_params[instrument_no]["best_profit_factor"] < 1.0:
+			config[instrument_no]["strategy"] = "none"
+		else:
+			config[instrument_no]["strategy"] = "donchian breakout"
+			config[instrument_no]["db lookback"] = best_params[instrument_no]["lookback"]
+			config[instrument_no]["db type"] = best_params[instrument_no]["db_type"]
 
 # GET POSITIONS FUNCTION ######################################################################
 positions: ndarray = np.zeros(50)
