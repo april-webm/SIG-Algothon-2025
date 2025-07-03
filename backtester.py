@@ -45,8 +45,8 @@ usage_error: str = """
         this function must take an 2-dimensional ndarray with a length of 50 and return
         an ndarray of length 50 that represent positions for each instruments
     --timeline [start_day: int] [end_day: int] supply a custom start day and end day to run the
-        backtester in. start day >= 1 and end day <= 750. If not specified, backtester will run
-        throughout days 1-750
+        backtester in. start day >= 1 and end day <= 1000. If not specified, backtester will run
+        throughout days 1-1000
     --disable-comms disable commission on trades
     --show [graph1 graph2 ...] - specify which graphs to show. If this option is not specified, 
         by default the backtester will show cumulative PnL, daily PnL and capital utilisation. A 
@@ -101,92 +101,94 @@ class BacktesterResults(TypedDict):
 
 
 class Params:
-    def __init__(
-        self,
-        strategy_filepath: str = default_strategy_filepath,
-        strategy_function_name: str = default_strategy_function_name,
-        strategy_function: FunctionType | None = None,
-        start_day: int = 1,
-        end_day: int = 750,
-        enable_commission: bool = True,
-        graphs: List[str] = ["cum-pnl", "sharpe-heat-map", "daily-pnl"],
-        prices_filepath: str = "./prices.txt",
-        instruments_to_test: List[int] = range(1,
-            51)
-    ) -> None:
-        self.strategy_filepath = strategy_filepath
-        self.strategy_function_name = strategy_function_name
-        self.strategy_function = strategy_function
-        self.start_day = start_day
-        self.end_day = end_day
-        self.enable_commission = enable_commission
-        self.graphs = graphs
-        self.prices_filepath: str = prices_filepath
-        self.instruments_to_test: List[int] = instruments_to_test
+	def __init__(
+		self,
+		strategy_filepath: str = default_strategy_filepath,
+		strategy_function_name: str = default_strategy_function_name,
+		strategy_function: FunctionType | None = None,
+		start_day: int = 1,
+		end_day: int = 1000,
+		enable_commission: bool = True,
+		graphs: List[str] = ["cum-pnl", "sharpe-heat-map", "daily-pnl"],
+		prices_filepath: str = "./prices.txt",
+		instruments_to_test: List[int] = range(1,
+			51)
+	) -> None:
+		self.strategy_filepath = strategy_filepath
+		self.strategy_function_name = strategy_function_name
+		self.strategy_function = strategy_function
+		self.start_day = start_day
+		self.end_day = end_day
+		self.enable_commission = enable_commission
+		self.graphs = graphs
+		self.prices_filepath: str = prices_filepath
+		self.instruments_to_test: List[int] = instruments_to_test
+
 
 
 # HELPER FUNCTIONS ###############################################################################
 def parse_command_line_args() -> Params:
-    total_args: int = len(sys.argv)
-    params: Params = Params()
+	total_args: int = len(sys.argv)
+	params: Params = Params()
 
-    if total_args > 1:
-        i: int = 1
-        while i < total_args:
-            current_arg: str = sys.argv[i]
+	if total_args > 1:
+		i: int = 1
+		while i < total_args:
+			current_arg: str = sys.argv[i]
 
-            if current_arg == "--path":
-                if i + 1 >= total_args:
-                    raise Exception(usage_error)
-                else:
-                    i += 1
-                    params.strategy_filepath = sys.argv[i]
-            elif current_arg == "--timeline":
-                if i + 2 >= total_args:
-                    raise Exception(usage_error)
-                else:
-                    params.start_day = int(sys.argv[i + 1])
-                    params.end_day = int(sys.argv[i + 2])
-                    i += 2
+			if current_arg == "--path":
+				if i + 1 >= total_args:
+					raise Exception(usage_error)
+				else:
+					i += 1
+					params.strategy_filepath = sys.argv[i]
+			elif current_arg == "--timeline":
+				if i + 2 >= total_args:
+					raise Exception(usage_error)
+				else:
+					params.start_day = int(sys.argv[i + 1])
+					params.end_day = int(sys.argv[i + 2])
+					i += 2
 
-                    if (
-                        params.start_day > params.end_day
-                        or params.start_day < 1
-                        or params.end_day > 750
-                    ):
-                        raise Exception(usage_error)
-            elif current_arg == "--disable-comms":
-                params.enable_commission = False
-            elif current_arg == "--function-name":
-                if i + 1 >= total_args:
-                    raise Exception(usage_error)
-                else:
-                    params.strategy_function_name = sys.argv[i + 1]
-                    i += 1
-            elif current_arg == "--show":
-                if i + 1 >= total_args:
-                    raise Exception(usage_error)
+					if (
+						params.start_day > params.end_day
+						or params.start_day < 1
+						or params.end_day > 1000  # Corrected limit
+					):
+						raise Exception(usage_error)
+			elif current_arg == "--disable-comms":
+				params.enable_commission = False
+			elif current_arg == "--function-name":
+				if i + 1 >= total_args:
+					raise Exception(usage_error)
+				else:
+					params.strategy_function_name = sys.argv[i + 1]
+					i += 1
+			elif current_arg == "--show":
+				if i + 1 >= total_args:
+					raise Exception(usage_error)
 
-                params.graphs = []
-                i += 1
-                current_arg = sys.argv[i]
-                while current_arg not in CMD_LINE_OPTIONS:
-                    if current_arg not in GRAPH_OPTIONS or len(params.graphs) == 3:
-                        raise Exception(usage_error)
+				params.graphs = []
+				i += 1
+				current_arg = sys.argv[i]
+				while current_arg not in CMD_LINE_OPTIONS:
+					if current_arg not in GRAPH_OPTIONS or len(params.graphs) == 3:
+						raise Exception(usage_error)
 
-                    params.graphs.append(current_arg)
-                    i += 1
-                    if i < total_args:
-                        current_arg = sys.argv[i]
-                    else:
-                        break
-                i -= 1
-            else:
-                raise Exception(usage_error)
+					params.graphs.append(current_arg)
+					i += 1
+					if i < total_args:
+						current_arg = sys.argv[i]
+					else:
+						break
+				i -= 1
+			else:
+				raise Exception(usage_error)
 
-            i += 1
+			i += 1
 
-    return params
+	return params
+
 
 
 def load_get_positions_function(
@@ -513,137 +515,137 @@ class Backtester:
 		:param end_day: day that the backtester should end running on (inclusive)
 		:return: a BacktesterResults() class that contains daily PnL data and capital usage per day
 		"""
-        # Initialise current positions, cash and portfolio value
-        current_positions: ndarray = np.zeros(NUMBER_OF_INSTRUMENTS)
-        cash: float = 0
-        portfolio_value: float = 0
+		# Initialise current positions, cash and portfolio value
+		current_positions: ndarray = np.zeros(NUMBER_OF_INSTRUMENTS)
+		cash: float = 0
+		portfolio_value: float = 0
 
-        # Initialise history of past positions per instrument
-        position_history: Dict[int, list[int]]
-        position_history = {instrument: [0] for instrument in range(0,
-            50)}
+		# Initialise history of past positions per instrument
+		position_history: Dict[int, list[int]]
+		position_history = {instrument: [0] for instrument in range(0,
+			50)}
 
-        # Initialise list of daily PnL's, capital utilisation and per instrument returns
-        daily_pnl_list: List[float] = []
-        daily_capital_utilisation_list: List[float] = []
-        instrument_returns: Dict[int, list[float]]
-        instrument_returns = {instrument: [0] for instrument in range(0,
-            50)}
+		# Initialise list of daily PnL's, capital utilisation and per instrument returns
+		daily_pnl_list: List[float] = []
+		daily_capital_utilisation_list: List[float] = []
+		instrument_returns: Dict[int, list[float]]
+		instrument_returns = {instrument: [0] for instrument in range(0,
+			50)}
 
-        # Initialise dictionary of instruments to trades, as well as a requested positions history
-        trades: Dict[int, List[Trade]] = {instrument: [] for instrument in range(0,
-            50)}
-        requested_positions_history: List[List[int]] = []
-        for instrument_no in range(0,
-            50): requested_positions_history.append([0])
+		# Initialise dictionary of instruments to trades, as well as a requested positions history
+		trades: Dict[int, List[Trade]] = {instrument: [] for instrument in range(0,
+			50)}
+		requested_positions_history: List[List[int]] = []
+		for instrument_no in range(0,
+			50): requested_positions_history.append([0])
 
-        # Iterate through specified timeline
-        for day in range(start_day,
-            end_day + 1):
-            # Get the prices so far
-            prices_so_far: ndarray = self.price_history[:, : day]
+		# Iterate through specified timeline
+		for day in range(start_day,
+			end_day + 1):
+			# Get the prices so far
+			prices_so_far: ndarray = self.price_history[:, : day]
 
-            # Get desired positions from strategy
-            if config is not None and instruments_to_test is not None:
-                new_positions: ndarray = self.getMyPosition(prices_so_far,
-                    config,
-                    instruments_to_test)
-            else:
-                new_positions: ndarray = self.getMyPosition(prices_so_far)
+			# Get desired positions from strategy
+			if config is not None and instruments_to_test is not None:
+				new_positions: ndarray = self.getMyPosition(prices_so_far,
+					config,
+					instruments_to_test)
+			else:
+				new_positions: ndarray = self.getMyPosition(prices_so_far)
 
-            # Get today's prices
-            current_prices: ndarray = prices_so_far[:, -1]
+			# Get today's prices
+			current_prices: ndarray = prices_so_far[:, -1]
 
-            # Calculate position limits
-            position_limits: ndarray = np.array(
-                [int(x) for x in INSTRUMENT_POSITION_LIMIT / current_prices]
-            )
+			# Calculate position limits
+			position_limits: ndarray = np.array(
+				[int(x) for x in INSTRUMENT_POSITION_LIMIT / current_prices]
+			)
 
-            # Adjust specified positions considering the position limit
-            adjusted_positions: ndarray = np.clip(
-                new_positions,
-                -position_limits,
-                position_limits
-            )
+			# Adjust specified positions considering the position limit
+			adjusted_positions: ndarray = np.clip(
+				new_positions,
+				-position_limits,
+				position_limits
+			)
 
-            # Calculate volume
-            delta_positions: ndarray = adjusted_positions - current_positions
-            volumes: ndarray = current_prices * np.abs(delta_positions)
-            total_volume: float = np.sum(volumes)
+			# Calculate volume
+			delta_positions: ndarray = adjusted_positions - current_positions
+			volumes: ndarray = current_prices * np.abs(delta_positions)
+			total_volume: float = np.sum(volumes)
 
-            # Calculate capital utilisation
-            capital_utilisation: float = total_volume / (
-                INSTRUMENT_POSITION_LIMIT * NUMBER_OF_INSTRUMENTS
-            )
-            daily_capital_utilisation_list.append(capital_utilisation)
+			# Calculate capital utilisation
+			capital_utilisation: float = total_volume / (
+				INSTRUMENT_POSITION_LIMIT * NUMBER_OF_INSTRUMENTS
+			)
+			daily_capital_utilisation_list.append(capital_utilisation)
 
-            # If commission is enabled, calculate it
-            commission: float = (
-                total_volume * COMMISSION_RATE if self.enable_commission else 0
-            )
+			# If commission is enabled, calculate it
+			commission: float = (
+				total_volume * COMMISSION_RATE if self.enable_commission else 0
+			)
 
-            # Subtract money spent on new positions from cash
-            cash -= current_prices.dot(delta_positions) + commission
+			# Subtract money spent on new positions from cash
+			cash -= current_prices.dot(delta_positions) + commission
 
-            # Update current positions and add to position history
-            current_positions = np.array(adjusted_positions)
-            for instrument in range(0,
-                50):
-                position_history[instrument].append(current_positions[instrument])
+			# Update current positions and add to position history
+			current_positions = np.array(adjusted_positions)
+			for instrument in range(0,
+				50):
+				position_history[instrument].append(current_positions[instrument])
 
-            # Get total value of all positions
-            positions_value: float = current_positions.dot(current_prices)
+			# Get total value of all positions
+			positions_value: float = current_positions.dot(current_prices)
 
-            # Calculate today's PnL and append it to list
-            profit_and_loss: float = cash + positions_value - portfolio_value
-            daily_pnl_list.append(profit_and_loss)
+			# Calculate today's PnL and append it to list
+			profit_and_loss: float = cash + positions_value - portfolio_value
+			daily_pnl_list.append(profit_and_loss)
 
-            # Calculate today's return
-            if day > start_day + 1:
-                for instrument in range(0,
-                    50):
-                    delta_price: float = (
-                        prices_so_far[instrument, -1] - prices_so_far[instrument, -2]
-                    )
-                    position: int = position_history[instrument][-2]
-                    instrument_return: float = delta_price * position
-                    instrument_returns[instrument].append(instrument_return)
+			# Calculate today's return
+			if day > start_day + 1:
+				for instrument in range(0,
+					50):
+					delta_price: float = (
+						prices_so_far[instrument, -1] - prices_so_far[instrument, -2]
+					)
+					position: int = position_history[instrument][-2]
+					instrument_return: float = delta_price * position
+					instrument_returns[instrument].append(instrument_return)
 
-            # Add to trades history
-            for instrument_no in range(0,
-                50):
-                if new_positions[instrument_no] != requested_positions_history[instrument_no][-1]:
-                    delta: int = new_positions[instrument_no] - requested_positions_history[
-                        instrument_no][-1]
-                    new_trade: Trade = Trade()
-                    new_trade["price_entry"] = current_prices[instrument_no]
-                    new_trade["order_type"] = "buy" if delta > 0 else \
-                        "sell"
-                    new_trade["day"] = day
-                    trades[instrument_no].append(new_trade)
-                    requested_positions_history[instrument_no].append(new_positions[instrument_no])
+			# Add to trades history
+			for instrument_no in range(0,
+				50):
+				if new_positions[instrument_no] != requested_positions_history[instrument_no][-1]:
+					delta: int = new_positions[instrument_no] - requested_positions_history[
+						instrument_no][-1]
+					new_trade: Trade = Trade()
+					new_trade["price_entry"] = current_prices[instrument_no]
+					new_trade["order_type"] = "buy" if delta > 0 else \
+						"sell"
+					new_trade["day"] = day
+					trades[instrument_no].append(new_trade)
+					requested_positions_history[instrument_no].append(new_positions[instrument_no])
 
-            # Update portfolio value
-            portfolio_value = cash + positions_value
+			# Update portfolio value
+			portfolio_value = cash + positions_value
 
-        backtester_results: BacktesterResults = BacktesterResults()
-        backtester_results["daily_pnl"] = np.array(daily_pnl_list)
-        backtester_results["daily_capital_utilisation"] = np.array(
-            daily_capital_utilisation_list
-        )
-        returns_list: List[List[float]] = [instrument_returns[i] for i in range(0,
-            50)]
-        backtester_results["daily_instrument_returns"] = np.array(returns_list)
-        backtester_results["trades"] = trades
-        backtester_results["start_day"] = start_day
-        backtester_results["end_day"] = end_day
+		backtester_results: BacktesterResults = BacktesterResults()
+		backtester_results["daily_pnl"] = np.array(daily_pnl_list)
+		backtester_results["daily_capital_utilisation"] = np.array(
+			daily_capital_utilisation_list
+		)
+		returns_list: List[List[float]] = [instrument_returns[i] for i in range(0,
+			50)]
+		backtester_results["daily_instrument_returns"] = np.array(returns_list)
+		backtester_results["trades"] = trades
+		backtester_results["start_day"] = start_day
+		backtester_results["end_day"] = end_day
 
-        return backtester_results
+		return backtester_results
 
-    def show_dashboard(
-        self, backtester_results: BacktesterResults, graphs: List[str]
-    ) -> None:
-        """
+	def show_dashboard(
+		self, backtester_results: BacktesterResults, graphs: List[str]
+	) -> None:
+		"""
 		Generates and shows a dashboard that summarises a backtest's results. Shows stats such
 		as mean PnL and sharpe ratio and plots cumulative PnL, Daily PnL and capital utilisation
 		:param backtester_results: contains data on a backtest
@@ -815,4 +817,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+	  main()
