@@ -10,16 +10,32 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
-INITIAL_STATIC_RATIOS = [{'pair': (2, 6), 'static_hedge_ratio': 1.230950923309608}, {'pair': (8, 34), 'static_hedge_ratio': -0.45056438339947014}, {'pair': (11, 23), 'static_hedge_ratio': 0.4297558163309586}, {'pair': (12, 49), 'static_hedge_ratio': 1.34358013625338}, {'pair': (18, 29), 'static_hedge_ratio': 0.14040796029892502}, {'pair': (20, 22), 'static_hedge_ratio': -0.3965516409675152}, {'pair': (26, 45), 'static_hedge_ratio': 0.02347164396604909}, {'pair': (33, 35), 'static_hedge_ratio': 0.11328852518540576}, {'pair': (37, 41), 'static_hedge_ratio': -0.6977054055106038}, {'pair': (40, 45), 'static_hedge_ratio': 1.3949785322842887}, {'pair': (47, 49), 'static_hedge_ratio': -0.7452121643361533}, {'pair': (48, 49), 'static_hedge_ratio': 0.932699583491404}]
+# --- PATH SETUP ---
+try:
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    parent_dir = os.path.dirname(current_dir)
+    if parent_dir not in sys.path:
+        sys.path.append(parent_dir)
+except NameError:
+    parent_dir = ".."
+
+# --- DATA IMPORT ---
+try:
+    from april.initial_static_ratios import INITIAL_STATIC_RATIOS
+except ImportError:
+    print("ERROR: initial_static_ratios.py not found. Please run info_static.py first.")
+    INITIAL_STATIC_RATIOS = []
 
 # ==============================================================================
 # SECTION 2: FINAL OPTIMIZED PARAMETERS
 # ==============================================================================
 
+# ** PLEASE REPLACE THESE WITH YOUR WINNING PARAMETERS **
+# These were the best parameters found for the Z-Score model in the early period
 EARLY_PERIOD_PARAMS = {
-    "ZSCORE_LOOKBACK": 150,      
-    "ENTRY_THRESHOLD": 0.5,      
-    "STOP_LOSS_THRESHOLD": 4.0,  
+    "ZSCORE_LOOKBACK": 150,      # From your previous Z-score run
+    "ENTRY_THRESHOLD": 0.5,      # From your previous Z-score run
+    "STOP_LOSS_THRESHOLD": 4.0,  # From your previous Z-score run
 }
 
 # These were the best parameters found for the OU model in the late period
@@ -30,7 +46,7 @@ LATE_PERIOD_PARAMS = {
 }
 
 # --- GLOBAL STRATEGY SETTINGS ---
-TRANSITION_DAY = 500  
+TRANSITION_DAY = 600  # The optimal start day for the winning OU strategy
 POSITION_SIZE = 10000
 
 # --- STATE MANAGEMENT ---
