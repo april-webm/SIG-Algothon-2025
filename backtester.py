@@ -20,10 +20,10 @@ COMMISSION_RATE: float = 0.0005
 NUMBER_OF_INSTRUMENTS: int = 50
 
 PLOT_COLORS: Dict[str, str] = {
-    "pnl": "#2ca02c",
-    "cum_pnl": "#1f77b4",
-    "utilisation": "#ff7f0e",
-    "sharpe_change": "#d62728",
+	"pnl": "#2ca02c",
+	"cum_pnl": "#1f77b4",
+	"utilisation": "#ff7f0e",
+	"sharpe_change": "#d62728",
 }
 
 default_strategy_filepath: str = "./main.py"
@@ -31,7 +31,7 @@ default_strategy_function_name: str = "getMyPosition"
 strategy_file_not_found_message: str = "Strategy file not found"
 could_not_load_spec_message: str = "Could not load spec for module from strategy file"
 strategy_function_does_not_exist_message: str = (
-    "getMyPosition function does not exist in strategy " "file"
+	"getMyPosition function does not exist in strategy " "file"
 )
 strategy_function_not_callable_message: str = "getMyPosition function is not callable"
 
@@ -62,42 +62,42 @@ usage_error: str = """
 """
 
 CMD_LINE_OPTIONS: List[str] = [
-    "--path",
-    "--function-name",
-    "--timeline",
-    "--disable-comms",
-    "--show",
+	"--path",
+	"--function-name",
+	"--timeline",
+	"--disable-comms",
+	"--show",
 ]
 
 GRAPH_OPTIONS: List[str] = [
-    "daily-pnl",
-    "cum-pnl",
-    "capital-util",
-    "sharpe-heat-map",
-    "cum-sharpe",
+	"daily-pnl",
+	"cum-pnl",
+	"capital-util",
+	"sharpe-heat-map",
+	"cum-sharpe",
 ]
 
 
 # TYPE DECLARATIONS ###############################################################################
 class InstrumentPriceEntry(TypedDict):
-    day: int
-    instrument: int
-    price: float
+	day: int
+	instrument: int
+	price: float
 
 
 class Trade(TypedDict):
-    price_entry: float
-    order_type: str
-    day: int
+	price_entry: float
+	order_type: str
+	day: int
 
 
 class BacktesterResults(TypedDict):
-    daily_pnl: ndarray
-    daily_capital_utilisation: ndarray
-    daily_instrument_returns: ndarray
-    trades: Dict[int, List[Trade]]
-    start_day: int
-    end_day: int
+	daily_pnl: ndarray
+	daily_capital_utilisation: ndarray
+	daily_instrument_returns: ndarray
+	trades: Dict[int, List[Trade]]
+	start_day: int
+	end_day: int
 
 
 class Params:
@@ -123,7 +123,6 @@ class Params:
 		self.graphs = graphs
 		self.prices_filepath: str = prices_filepath
 		self.instruments_to_test: List[int] = instruments_to_test
-
 
 
 # HELPER FUNCTIONS ###############################################################################
@@ -190,11 +189,10 @@ def parse_command_line_args() -> Params:
 	return params
 
 
-
 def load_get_positions_function(
-    strategy_filepath: str, strategy_function_name: str
+	strategy_filepath: str, strategy_function_name: str
 ) -> FunctionType:
-    """
+	"""
 	validates, loads and returns the FunctionType of a specified getMyPositions function - can
 	also be called something different, but must have the same signature as the getMyPositions
 	function specified in the starter code.
@@ -203,313 +201,313 @@ def load_get_positions_function(
 	same signature
 	:return: FunctionType of your getMyPositions function
 	"""
-    # Make sure file path is absolute and normalised
-    filepath: str = os.path.abspath(strategy_filepath)
+	# Make sure file path is absolute and normalised
+	filepath: str = os.path.abspath(strategy_filepath)
 
-    # Check if file exists
-    if not os.path.isfile(filepath):
-        raise FileNotFoundError(strategy_file_not_found_message)
+	# Check if file exists
+	if not os.path.isfile(filepath):
+		raise FileNotFoundError(strategy_file_not_found_message)
 
-    # Get module name
-    module_name: str = os.path.splitext(os.path.basename(filepath))[0]
+	# Get module name
+	module_name: str = os.path.splitext(os.path.basename(filepath))[0]
 
-    # Load the module spec
-    spec: ModuleSpec = importlib.util.spec_from_file_location(module_name,
-        filepath)
-    if spec is None:
-        raise ImportError(could_not_load_spec_message)
+	# Load the module spec
+	spec: ModuleSpec = importlib.util.spec_from_file_location(module_name,
+		filepath)
+	if spec is None:
+		raise ImportError(could_not_load_spec_message)
 
-    # Create a new module based on the spec
-    module: ModuleType = importlib.util.module_from_spec(spec)
+	# Create a new module based on the spec
+	module: ModuleType = importlib.util.module_from_spec(spec)
 
-    # Create a new module based on the spec
-    sys.modules[module_name] = module
+	# Create a new module based on the spec
+	sys.modules[module_name] = module
 
-    # Execute the module
-    spec.loader.exec_module(module)
+	# Execute the module
+	spec.loader.exec_module(module)
 
-    # Get the strategy function from module
-    if not hasattr(module,
-        strategy_function_name):
-        raise AttributeError(strategy_function_does_not_exist_message)
-    function = getattr(module,
-        strategy_function_name)
+	# Get the strategy function from module
+	if not hasattr(module,
+		strategy_function_name):
+		raise AttributeError(strategy_function_does_not_exist_message)
+	function = getattr(module,
+		strategy_function_name)
 
-    # Verify that it's callable
-    if not callable(function):
-        raise TypeError(strategy_function_not_callable_message)
+	# Verify that it's callable
+	if not callable(function):
+		raise TypeError(strategy_function_not_callable_message)
 
-    return function
+	return function
 
 
 def generate_stats_subplot(
-    results: BacktesterResults, subplot: Axes, enable_commission: bool
+	results: BacktesterResults, subplot: Axes, enable_commission: bool
 ) -> Axes:
-    subplot.axis("off")
+	subplot.axis("off")
 
-    win_rate_pct: float = (
-        np.sum(results["daily_pnl"] > 0) / len(results["daily_pnl"]) * 100
-    )
+	win_rate_pct: float = (
+		np.sum(results["daily_pnl"] > 0) / len(results["daily_pnl"]) * 100
+	)
 
-    stats_text: str = (
-        f"Ran from day {results['start_day']} to {results['end_day']}\n"
-        r"$\bf{Commission \ Turned \ On:}$" + f"{enable_commission}\n\n"
-                                              r"$\bf{Backtester \ Stats}$" + "\n\n"
-                                                                             f"Mean PnL: ${results['daily_pnl'].mean():.2f}\n"
-                                                                             f"Std Dev: ${results['daily_pnl'].std():.2f}\n"
-                                                                             f"Annualised Sharpe Ratio: "
-                                                                             f"{np.sqrt(250) * results['daily_pnl'].mean() / results['daily_pnl'].std():.2f}\n"
-                                                                             f"Win Rate %: {win_rate_pct:.2f}% \n"
-                                                                             f"Score: {results['daily_pnl'].mean() - 0.1 * results['daily_pnl'].std():.2f}"
-    )
+	stats_text: str = (
+		f"Ran from day {results['start_day']} to {results['end_day']}\n"
+		r"$\bf{Commission \ Turned \ On:}$" + f"{enable_commission}\n\n"
+											  r"$\bf{Backtester \ Stats}$" + "\n\n"
+																			 f"Mean PnL: ${results['daily_pnl'].mean():.2f}\n"
+																			 f"Std Dev: ${results['daily_pnl'].std():.2f}\n"
+																			 f"Annualised Sharpe Ratio: "
+																			 f"{np.sqrt(250) * results['daily_pnl'].mean() / results['daily_pnl'].std():.2f}\n"
+																			 f"Win Rate %: {win_rate_pct:.2f}% \n"
+																			 f"Score: {results['daily_pnl'].mean() - 0.1 * results['daily_pnl'].std():.2f}"
+	)
 
-    subplot.text(
-        0.05,
-        0.95,
-        stats_text,
-        fontsize=14,
-        va="top",
-        ha="left",
-        linespacing=1.5
-    )
+	subplot.text(
+		0.05,
+		0.95,
+		stats_text,
+		fontsize=14,
+		va="top",
+		ha="left",
+		linespacing=1.5
+	)
 
-    return subplot
+	return subplot
 
 
 def generate_cumulative_pnl_subplot(results: BacktesterResults, subplot: Axes) -> Axes:
-    # Generate ndarray of cumulative PNl over time
-    cumulative_pnl: ndarray = np.cumsum(results["daily_pnl"])
+	# Generate ndarray of cumulative PNl over time
+	cumulative_pnl: ndarray = np.cumsum(results["daily_pnl"])
 
-    # Generate ndarray of days
-    days: ndarray = np.arange(results["start_day"],
-        results["end_day"] + 1)
+	# Generate ndarray of days
+	days: ndarray = np.arange(results["start_day"],
+		results["end_day"] + 1)
 
-    # Generate subplot
-    subplot.set_title(
-        f"Cumulative Profit and Loss from day {results['start_day']} to {results['end_day']}",
-        fontsize=12,
-        fontweight="bold"
-    )
-    subplot.set_xlabel("Days",
-        fontsize=10)
-    subplot.set_ylabel("Total PnL ($)",
-        fontsize=10)
-    subplot.grid(True,
-        linestyle="--",
-        linewidth=0.5,
-        alpha=0.7)
-    subplot.spines["top"].set_visible(False)
-    subplot.spines["right"].set_visible(False)
-    subplot.plot(
-        days,
-        cumulative_pnl,
-        linestyle="-",
-        color=PLOT_COLORS["cum_pnl"],
-        linewidth=2,
-    )
+	# Generate subplot
+	subplot.set_title(
+		f"Cumulative Profit and Loss from day {results['start_day']} to {results['end_day']}",
+		fontsize=12,
+		fontweight="bold"
+	)
+	subplot.set_xlabel("Days",
+		fontsize=10)
+	subplot.set_ylabel("Total PnL ($)",
+		fontsize=10)
+	subplot.grid(True,
+		linestyle="--",
+		linewidth=0.5,
+		alpha=0.7)
+	subplot.spines["top"].set_visible(False)
+	subplot.spines["right"].set_visible(False)
+	subplot.plot(
+		days,
+		cumulative_pnl,
+		linestyle="-",
+		color=PLOT_COLORS["cum_pnl"],
+		linewidth=2,
+	)
 
-    return subplot
+	return subplot
 
 
 def generate_daily_pnl_subplot(results: BacktesterResults, subplot: Axes) -> Axes:
-    # Generate ndarray of days
-    days: ndarray = np.arange(results["start_day"],
-        results["end_day"] + 1)
+	# Generate ndarray of days
+	days: ndarray = np.arange(results["start_day"],
+		results["end_day"] + 1)
 
-    # Generate Subplot
-    subplot.set_title(
-        f"Daily Profit and Loss (PnL) from day {results['start_day']} to {results['end_day']}",
-        fontsize=12,
-        fontweight="bold",
-    )
-    subplot.set_xlabel("Days",
-        fontsize=10)
-    subplot.set_ylabel("PnL ($)",
-        fontsize=10)
-    subplot.grid(True,
-        linestyle="--",
-        linewidth=0.5,
-        alpha=0.7)
-    subplot.spines["top"].set_visible(False)
-    subplot.spines["right"].set_visible(False)
-    subplot.plot(days,
-        results["daily_pnl"],
-        linestyle="-",
-        color=PLOT_COLORS["pnl"])
+	# Generate Subplot
+	subplot.set_title(
+		f"Daily Profit and Loss (PnL) from day {results['start_day']} to {results['end_day']}",
+		fontsize=12,
+		fontweight="bold",
+	)
+	subplot.set_xlabel("Days",
+		fontsize=10)
+	subplot.set_ylabel("PnL ($)",
+		fontsize=10)
+	subplot.grid(True,
+		linestyle="--",
+		linewidth=0.5,
+		alpha=0.7)
+	subplot.spines["top"].set_visible(False)
+	subplot.spines["right"].set_visible(False)
+	subplot.plot(days,
+		results["daily_pnl"],
+		linestyle="-",
+		color=PLOT_COLORS["pnl"])
 
-    return subplot
+	return subplot
 
 
 def generate_capital_utilisation_subplot(
-    results: BacktesterResults, subplot: Axes
+	results: BacktesterResults, subplot: Axes
 ) -> Axes:
-    # Transform daily capital utilisation into percentages
-    daily_capital_utilisation_pct: ndarray = results["daily_capital_utilisation"] * 100
+	# Transform daily capital utilisation into percentages
+	daily_capital_utilisation_pct: ndarray = results["daily_capital_utilisation"] * 100
 
-    # Generate ndarray of days
-    days: ndarray = np.arange(results["start_day"],
-        results["end_day"] + 1)
+	# Generate ndarray of days
+	days: ndarray = np.arange(results["start_day"],
+		results["end_day"] + 1)
 
-    subplot.set_title(
-        f"Daily capital utilisation from day {results['start_day']} to {results['end_day']}",
-        fontsize=12,
-        fontweight="bold",
-    )
-    subplot.set_xlabel("Days",
-        fontsize=10)
-    subplot.set_ylabel("Capital Utilisation %",
-        fontsize=10)
-    subplot.grid(True,
-        linestyle="--",
-        linewidth=0.5,
-        alpha=0.7)
-    subplot.spines["top"].set_visible(False)
-    subplot.spines["right"].set_visible(False)
-    subplot.set_ylim(0,
-        100)
-    subplot.plot(
-        days,
-        daily_capital_utilisation_pct,
-        linestyle="-",
-        color=PLOT_COLORS["utilisation"],
-    )
+	subplot.set_title(
+		f"Daily capital utilisation from day {results['start_day']} to {results['end_day']}",
+		fontsize=12,
+		fontweight="bold",
+	)
+	subplot.set_xlabel("Days",
+		fontsize=10)
+	subplot.set_ylabel("Capital Utilisation %",
+		fontsize=10)
+	subplot.grid(True,
+		linestyle="--",
+		linewidth=0.5,
+		alpha=0.7)
+	subplot.spines["top"].set_visible(False)
+	subplot.spines["right"].set_visible(False)
+	subplot.set_ylim(0,
+		100)
+	subplot.plot(
+		days,
+		daily_capital_utilisation_pct,
+		linestyle="-",
+		color=PLOT_COLORS["utilisation"],
+	)
 
-    return subplot
+	return subplot
 
 
 def generate_sharpe_heat_map(results: BacktesterResults, subplot: Axes) -> Axes:
-    # Generate ndarray of sharpe ratios for each instrument
-    returns: ndarray = results["daily_instrument_returns"]
-    means: ndarray = np.mean(returns,
-        axis=1)
-    stds: ndarray = np.std(returns,
-        axis=1)
+	# Generate ndarray of sharpe ratios for each instrument
+	returns: ndarray = results["daily_instrument_returns"]
+	means: ndarray = np.mean(returns,
+		axis=1)
+	stds: ndarray = np.std(returns,
+		axis=1)
 
-    sharpe_ratios: ndarray = (means / stds) * np.sqrt(250)
+	sharpe_ratios: ndarray = (means / stds) * np.sqrt(250)
 
-    # Reshape grid into (1, 50) for the horizontal heatmap
-    sharpe_grid = sharpe_ratios.reshape(1,
-        -1)
+	# Reshape grid into (1, 50) for the horizontal heatmap
+	sharpe_grid = sharpe_ratios.reshape(1,
+		-1)
 
-    # Plot the heatmap
-    im = subplot.imshow(sharpe_grid,
-        cmap="viridis",
-        aspect="auto")
-    subplot.set_title("Annualised Sharpe-Ratio Heat Map (Higher = Better)",
-        fontsize=12)
-    subplot.set_xticks(np.arange(len(sharpe_ratios)))
-    subplot.set_xticklabels([str(i) for i in range(len(sharpe_ratios))],
-        fontsize=6)
-    subplot.set_yticks([])
-    color_bar = subplot.figure.colorbar(
-        im,
-        ax=subplot,
-        orientation="vertical",
-        pad=0.01
-    )
-    color_bar.set_label("Sharpe",
-        fontsize=9)
+	# Plot the heatmap
+	im = subplot.imshow(sharpe_grid,
+		cmap="viridis",
+		aspect="auto")
+	subplot.set_title("Annualised Sharpe-Ratio Heat Map (Higher = Better)",
+		fontsize=12)
+	subplot.set_xticks(np.arange(len(sharpe_ratios)))
+	subplot.set_xticklabels([str(i) for i in range(len(sharpe_ratios))],
+		fontsize=6)
+	subplot.set_yticks([])
+	color_bar = subplot.figure.colorbar(
+		im,
+		ax=subplot,
+		orientation="vertical",
+		pad=0.01
+	)
+	color_bar.set_label("Sharpe",
+		fontsize=9)
 
-    return subplot
+	return subplot
 
 
 def generate_sharpe_ratio_subplot(results: BacktesterResults, subplot: Axes) -> Axes:
-    # Generate cumulative means and standard deviation
-    daily_pnl: ndarray = results["daily_pnl"]
-    counts: ndarray = np.arange(1,
-        results["end_day"] - results["start_day"] + 2)
-    days: ndarray = np.arange(results["start_day"],
-        results["end_day"] + 1)
+	# Generate cumulative means and standard deviation
+	daily_pnl: ndarray = results["daily_pnl"]
+	counts: ndarray = np.arange(1,
+		results["end_day"] - results["start_day"] + 2)
+	days: ndarray = np.arange(results["start_day"],
+		results["end_day"] + 1)
 
-    cumulative_pnl: ndarray = np.cumsum(daily_pnl)
-    cumulative_means: ndarray = cumulative_pnl / counts
-    cumulative_std_dev: ndarray = np.array(
-        [np.std(daily_pnl[: i + 1],
-            ddof=0) for i in range(len(daily_pnl))]
-    )
+	cumulative_pnl: ndarray = np.cumsum(daily_pnl)
+	cumulative_means: ndarray = cumulative_pnl / counts
+	cumulative_std_dev: ndarray = np.array(
+		[np.std(daily_pnl[: i + 1],
+			ddof=0) for i in range(len(daily_pnl))]
+	)
 
-    sharpe_ratios: ndarray = (cumulative_means / cumulative_std_dev) * np.sqrt(250)
+	sharpe_ratios: ndarray = (cumulative_means / cumulative_std_dev) * np.sqrt(250)
 
-    subplot.set_title(
-        f"Change in Annualised Sharpe Ratio from day {results['start_day']} to"
-        f" {results['end_day']}",
-        fontsize=12,
-        fontweight="bold",
-    )
-    subplot.set_xlabel("Days",
-        fontsize=10)
-    subplot.set_ylabel("Annualised Sharpe Ratio",
-        fontsize=10)
-    subplot.grid(True,
-        linestyle="--",
-        linewidth=0.5,
-        alpha=0.7)
-    subplot.spines["top"].set_visible(False)
-    subplot.spines["right"].set_visible(False)
-    subplot.plot(days,
-        sharpe_ratios,
-        linestyle="-",
-        color=PLOT_COLORS["sharpe_change"])
+	subplot.set_title(
+		f"Change in Annualised Sharpe Ratio from day {results['start_day']} to"
+		f" {results['end_day']}",
+		fontsize=12,
+		fontweight="bold",
+	)
+	subplot.set_xlabel("Days",
+		fontsize=10)
+	subplot.set_ylabel("Annualised Sharpe Ratio",
+		fontsize=10)
+	subplot.grid(True,
+		linestyle="--",
+		linewidth=0.5,
+		alpha=0.7)
+	subplot.spines["top"].set_visible(False)
+	subplot.spines["right"].set_visible(False)
+	subplot.plot(days,
+		sharpe_ratios,
+		linestyle="-",
+		color=PLOT_COLORS["sharpe_change"])
 
-    return subplot
+	return subplot
 
 
 def get_subplot(graph_type: str, results: BacktesterResults, subplot: Axes) -> Axes:
-    if graph_type == "daily-pnl":
-        return generate_daily_pnl_subplot(results,
-            subplot)
-    elif graph_type == "cum-pnl":
-        return generate_cumulative_pnl_subplot(results,
-            subplot)
-    elif graph_type == "capital-util":
-        return generate_capital_utilisation_subplot(results,
-            subplot)
-    elif graph_type == "sharpe-heat-map":
-        return generate_sharpe_heat_map(results,
-            subplot)
-    elif graph_type == "cum-sharpe":
-        return generate_sharpe_ratio_subplot(results,
-            subplot)
+	if graph_type == "daily-pnl":
+		return generate_daily_pnl_subplot(results,
+			subplot)
+	elif graph_type == "cum-pnl":
+		return generate_cumulative_pnl_subplot(results,
+			subplot)
+	elif graph_type == "capital-util":
+		return generate_capital_utilisation_subplot(results,
+			subplot)
+	elif graph_type == "sharpe-heat-map":
+		return generate_sharpe_heat_map(results,
+			subplot)
+	elif graph_type == "cum-sharpe":
+		return generate_sharpe_ratio_subplot(results,
+			subplot)
 
 
 def get_ema(instrument_price_history: ndarray, lookback: int) -> ndarray:
-    price_series: Series = pd.Series(instrument_price_history)
-    return price_series.ewm(span=lookback,
-        adjust=False).mean()
+	price_series: Series = pd.Series(instrument_price_history)
+	return price_series.ewm(span=lookback,
+		adjust=False).mean()
 
 
 # BACKTESTER CLASS ################################################################################
 class Backtester:
-    def __init__(self, params: Params) -> None:
-        self.enable_commission: bool = params.enable_commission
-        self.getMyPosition: FunctionType | None
-        if params.strategy_function is not None:
-            self.getMyPosition = params.strategy_function
-        else:
-            self.getMyPosition = load_get_positions_function(
-                params.strategy_filepath,
-                params.strategy_function_name
-            )
+	def __init__(self, params: Params) -> None:
+		self.enable_commission: bool = params.enable_commission
+		self.getMyPosition: FunctionType | None
+		if params.strategy_function is not None:
+			self.getMyPosition = params.strategy_function
+		else:
+			self.getMyPosition = load_get_positions_function(
+				params.strategy_filepath,
+				params.strategy_function_name
+			)
 
-        # Load prices data
-        self.raw_prices_df: DataFrame = pd.read_csv(
-            params.prices_filepath,
-            sep=r"\s+",
-            header=None
-        )
+		# Load prices data
+		self.raw_prices_df: DataFrame = pd.read_csv(
+			params.prices_filepath,
+			sep=r"\s+",
+			header=None
+		)
 
-        # Transpose the raw prices such that every index represents an instrument number and each
-        # row is a list of prices
-        self.price_history: ndarray = self.raw_prices_df.to_numpy().T
+		# Transpose the raw prices such that every index represents an instrument number and each
+		# row is a list of prices
+		self.price_history: ndarray = self.raw_prices_df.to_numpy().T
 
-    def run(
-        self,
-        start_day: int,
-        end_day: int,
-        config: Dict[int, Dict[str, Dict[str, float]]] | None = None,
-        instruments_to_test: List[int] | None = None
-    ) -> BacktesterResults:
-        """
+	def run(
+		self,
+		start_day: int,
+		end_day: int,
+		config: Dict[int, Dict[str, Dict[str, float]]] | None = None,
+		instruments_to_test: List[int] | None = None
+	) -> BacktesterResults:
+		"""
 		Run the backtest through specified timeline and keep track of daily PnL and capital usage
 		:param start_day: day that the backtester should start running on
 		:param end_day: day that the backtester should end running on (inclusive)
@@ -652,169 +650,169 @@ class Backtester:
 		:param graphs: list of graphs to be shown
 		:return: None
 		"""
-        fig, axs = plt.subplots(2,
-            2,
-            figsize=(18, 8))
+		fig, axs = plt.subplots(2,
+			2,
+			figsize=(18, 8))
 
-        # Show Stats
-        axs[0][0] = generate_stats_subplot(
-            backtester_results,
-            axs[0][0],
-            self.enable_commission
-        )
+		# Show Stats
+		axs[0][0] = generate_stats_subplot(
+			backtester_results,
+			axs[0][0],
+			self.enable_commission
+		)
 
-        # Get first subplot
-        axs[0][1] = get_subplot(graphs[0],
-            backtester_results,
-            axs[0][1])
+		# Get first subplot
+		axs[0][1] = get_subplot(graphs[0],
+			backtester_results,
+			axs[0][1])
 
-        # Get second subplot
-        if len(graphs) > 1:
-            axs[1][0] = get_subplot(graphs[1],
-                backtester_results,
-                axs[1][0])
-        else:
-            axs[1][0].axis("off")
+		# Get second subplot
+		if len(graphs) > 1:
+			axs[1][0] = get_subplot(graphs[1],
+				backtester_results,
+				axs[1][0])
+		else:
+			axs[1][0].axis("off")
 
-        # Get third subplot
-        if len(graphs) > 2:
-            axs[1][1] = get_subplot(graphs[2],
-                backtester_results,
-                axs[1][1])
-        else:
-            axs[1][1].axis("off")
+		# Get third subplot
+		if len(graphs) > 2:
+			axs[1][1] = get_subplot(graphs[2],
+				backtester_results,
+				axs[1][1])
+		else:
+			axs[1][1].axis("off")
 
-        plt.tight_layout()
-        plt.subplots_adjust(top=0.88)
-        plt.suptitle("Backtest Performance Summary",
-            fontsize=16,
-            fontweight="bold")
-        plt.show()
+		plt.tight_layout()
+		plt.subplots_adjust(top=0.88)
+		plt.suptitle("Backtest Performance Summary",
+			fontsize=16,
+			fontweight="bold")
+		plt.show()
 
-    def show_price_entries(self, backtester_results: BacktesterResults) -> None:
-        """
+	def show_price_entries(self, backtester_results: BacktesterResults) -> None:
+		"""
 		Generates a graph that shows the trades that were made on each instrument.
 		:param backtester_results: Results of a backtester
 		:return: None
 		"""
-        # Get Price Data
-        prices_list: List[ndarray] = [
-            self.price_history[instrument_no][backtester_results["start_day"] - 1:
-                                              backtester_results["end_day"]] for instrument_no in
-            range(0, 50)
-        ]
-        prices: ndarray = np.array(prices_list)
+		# Get Price Data
+		prices_list: List[ndarray] = [
+			self.price_history[instrument_no][backtester_results["start_day"] - 1:
+											  backtester_results["end_day"]] for instrument_no in
+			range(0, 50)
+		]
+		prices: ndarray = np.array(prices_list)
 
-        # Get an ndarray of days
-        days: ndarray = np.arange(backtester_results["start_day"] - 1,
-            backtester_results["end_day"])
+		# Get an ndarray of days
+		days: ndarray = np.arange(backtester_results["start_day"] - 1,
+			backtester_results["end_day"])
 
-        # Get buys and sells
-        instrument_trades: List[List[Trade]] = [
-            backtester_results["trades"][instrument_no] for instrument_no in range(0, 50)
-        ]
+		# Get buys and sells
+		instrument_trades: List[List[Trade]] = [
+			backtester_results["trades"][instrument_no] for instrument_no in range(0, 50)
+		]
 
-        buy_entry_prices: List[List[float]] = [[] for i in range(0, 50)]
-        buy_entry_days: List[List[int]] = [[] for i in range(0, 50)]
-        sell_entry_prices: List[List[float]] = [[] for i in range(0, 50)]
-        sell_entry_days: List[List[int]] = [[] for i in range(0, 50)]
+		buy_entry_prices: List[List[float]] = [[] for i in range(0, 50)]
+		buy_entry_days: List[List[int]] = [[] for i in range(0, 50)]
+		sell_entry_prices: List[List[float]] = [[] for i in range(0, 50)]
+		sell_entry_days: List[List[int]] = [[] for i in range(0, 50)]
 
-        for instrument_no in range(0, 50):
-            for trade in instrument_trades[instrument_no]:
-                if trade["order_type"] == "buy":
-                    buy_entry_prices[instrument_no].append(trade["price_entry"])
-                    buy_entry_days[instrument_no].append(trade["day"])
-                else:
-                    sell_entry_prices[instrument_no].append(trade["price_entry"])
-                    sell_entry_days[instrument_no].append(trade["day"])
+		for instrument_no in range(0, 50):
+			for trade in instrument_trades[instrument_no]:
+				if trade["order_type"] == "buy":
+					buy_entry_prices[instrument_no].append(trade["price_entry"])
+					buy_entry_days[instrument_no].append(trade["day"])
+				else:
+					sell_entry_prices[instrument_no].append(trade["price_entry"])
+					sell_entry_days[instrument_no].append(trade["day"])
 
-        # Plot each instrument's price and entries
-        fig, ax = plt.subplots(figsize=(14, 6))
-        instrument_no = 0
+		# Plot each instrument's price and entries
+		fig, ax = plt.subplots(figsize=(14, 6))
+		instrument_no = 0
 
-        # Plot Price
-        line, = ax.plot(
-            days,
-            prices[instrument_no],
-            color="blue",
-            linestyle="--",
-            linewidth=2,
-            label="Instrument Price",
-            zorder=1,
-        )
-        ax.set_xlabel("Days", fontsize=10)
-        ax.set_ylabel("Price ($)", fontsize=10)
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
+		# Plot Price
+		line, = ax.plot(
+			days,
+			prices[instrument_no],
+			color="blue",
+			linestyle="--",
+			linewidth=2,
+			label="Instrument Price",
+			zorder=1,
+		)
+		ax.set_xlabel("Days", fontsize=10)
+		ax.set_ylabel("Price ($)", fontsize=10)
+		ax.spines["top"].set_visible(False)
+		ax.spines["right"].set_visible(False)
 
-        # Plot entries
-        buy_scatter = ax.scatter(buy_entry_days[instrument_no],
-            buy_entry_prices[instrument_no],
-            color="green",
-            marker="^",
-            s=100,
-            label="Long Entry",
-            zorder=3)
-        sell_scatter = ax.scatter(sell_entry_days[instrument_no],
-            sell_entry_prices[instrument_no],
-            color="red",
-            marker="v",
-            s=100,
-            label="Short Entry",
-            zorder=3)
+		# Plot entries
+		buy_scatter = ax.scatter(buy_entry_days[instrument_no],
+			buy_entry_prices[instrument_no],
+			color="green",
+			marker="^",
+			s=100,
+			label="Long Entry",
+			zorder=3)
+		sell_scatter = ax.scatter(sell_entry_days[instrument_no],
+			sell_entry_prices[instrument_no],
+			color="red",
+			marker="v",
+			s=100,
+			label="Short Entry",
+			zorder=3)
 
-        ax.set_title(f"Instrument #{instrument_no} Buys/Sells")
+		ax.set_title(f"Instrument #{instrument_no} Buys/Sells")
 
-        # Event handler for switching between plots
-        def on_key(event):
-            nonlocal instrument_no
-            if event.key == 'right':
-                instrument_no = (instrument_no + 1) % len(prices)
-            elif event.key == 'left':
-                instrument_no = (instrument_no - 1) % len(prices)
-            else:
-                return
+		# Event handler for switching between plots
+		def on_key(event):
+			nonlocal instrument_no
+			if event.key == 'right':
+				instrument_no = (instrument_no + 1) % len(prices)
+			elif event.key == 'left':
+				instrument_no = (instrument_no - 1) % len(prices)
+			else:
+				return
 
-            # update the line data and title
-            line.set_ydata(prices[instrument_no])
+			# update the line data and title
+			line.set_ydata(prices[instrument_no])
 
-            buy_scatter.set_offsets(
-                np.column_stack((
-                    buy_entry_days[instrument_no],
-                    buy_entry_prices[instrument_no]
-                ))
-            )
+			buy_scatter.set_offsets(
+				np.column_stack((
+					buy_entry_days[instrument_no],
+					buy_entry_prices[instrument_no]
+				))
+			)
 
-            sell_scatter.set_offsets(
-                np.column_stack((
-                    sell_entry_days[instrument_no],
-                    sell_entry_prices[instrument_no]
-                ))
-            )
+			sell_scatter.set_offsets(
+				np.column_stack((
+					sell_entry_days[instrument_no],
+					sell_entry_prices[instrument_no]
+				))
+			)
 
-            ax.set_title(f"Instrument #{instrument_no} Buys/Sells")
-            ax.relim()
-            ax.autoscale_view()
-            fig.canvas.draw_idle()
+			ax.set_title(f"Instrument #{instrument_no} Buys/Sells")
+			ax.relim()
+			ax.autoscale_view()
+			fig.canvas.draw_idle()
 
-        fig.canvas.mpl_connect('key_press_event', on_key)
-        plt.legend()
-        plt.grid(True, alpha=0.7)
-        plt.show()
+		fig.canvas.mpl_connect('key_press_event', on_key)
+		plt.legend()
+		plt.grid(True, alpha=0.7)
+		plt.show()
 
 
 # MAIN EXECUTION #################################################################################
 def main() -> None:
-    params: Params = parse_command_line_args()
-    backtester: Backtester = Backtester(params)
-    backtester_results: BacktesterResults = backtester.run(
-        params.start_day,
-        params.end_day
-    )
-    backtester.show_dashboard(backtester_results,
-        params.graphs)
-    backtester.show_price_entries(backtester_results)
+	params: Params = parse_command_line_args()
+	backtester: Backtester = Backtester(params)
+	backtester_results: BacktesterResults = backtester.run(
+		params.start_day,
+		params.end_day
+	)
+	backtester.show_dashboard(backtester_results,
+		params.graphs)
+	backtester.show_price_entries(backtester_results)
 
 
 if __name__ == "__main__":
-	  main()
+	main()
