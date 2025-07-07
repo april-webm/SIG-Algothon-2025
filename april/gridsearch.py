@@ -3,15 +3,14 @@
 # ==============================================================================
 import os
 import sys
+import numpy as np
+import pandas as pd
+import warnings
 from itertools import product
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import multiprocessing
-import numpy as np
-import pandas as pd
-import statsmodels.api as sm
-from statsmodels.tsa.stattools import coint
 
-# --- PATH SETUP ---
+# --- ROBUST PATH SETUP ---
 try:
     current_dir = os.path.dirname(os.path.abspath(__file__))
     parent_dir = os.path.dirname(current_dir)
@@ -19,196 +18,227 @@ try:
         sys.path.append(parent_dir)
 except NameError:
     parent_dir = ".."
+    if parent_dir not in sys.path:
+        sys.path.append(parent_dir)
 
 from backtester import Backtester, Params
 
-# ==============================================================================
-# SECTION 2: INITIAL DATA ANALYSIS
-# ==============================================================================
-IDEAL_PAIRS = [
-    (2, 6), (8, 34), (11, 23), (12, 49), (18, 29), (20, 22), 
-    (26, 45), (33, 35), (37, 41), (40, 45), (47, 49), (48, 49)
-]
-
-def create_initial_static_ratios(price_df: pd.DataFrame, static_calculation_period: int):
-    print(f"--- Calculating initial static hedge ratios using first {static_calculation_period} days ---")
-    static_period_df = price_df.iloc[:static_calculation_period]
-    initial_ratios = []
-    for pair in IDEAL_PAIRS:
-        y = static_period_df.iloc[:, pair[0]]
-        x = static_period_df.iloc[:, pair[1]]
-        model = sm.OLS(y, sm.add_constant(x)).fit()
-        hedge_ratio = model.params.iloc[1]
-        initial_ratios.append({'pair': pair, 'static_hedge_ratio': hedge_ratio})
-    print("--- Static ratio calculation complete ---")
-    return initial_ratios
+warnings.filterwarnings("ignore")
 
 # ==============================================================================
-# SECTION 3: THE TRADING STRATEGY CLASS
+# SECTION 2: THE ADAPTIVE MEAN-REVERSION STRATEGY CLASS
 # ==============================================================================
-class PairsTradingStrategy:
-    def __init__(self, params: dict, static_ratios: list):
+
+class AdaptiveEMA:
+    """
+    Encapsulates an adaptive EMA strategy designed to trade mean-reversion,
+    filtered by the Hurst exponent.
+    """
+    def __init__(self, params: dict):
         self.params = params
-        self.static_ratios = static_ratios
-        self.pair_position_state = {str(info['pair']): 0 for info in static_ratios}
+        self.last_optimization_day = 0
+        self.optimal_ema_params = {}
+        self.max_position_size = 10000
+        self.ema_grid = {
+            "SHORT_WINDOWS": [5, 10, 15, 20, 40, 60, 80],
+            "LONG_WINDOWS": [25, 30, 40, 50, 60, 80, 100, 120],
+        }
 
-    def getMyPosition(self, prcSoFar: np.ndarray) -> np.ndarray:
-        final_positions = np.zeros(50)
+    def _calculate_ema(self, prices: np.ndarray, window: int) -> np.ndarray:
+        return pd.Series(prices).ewm(span=window, adjust=False).mean().to_numpy()
+
+    def _calculate_hurst_exponent(self, prices: np.ndarray) -> float:
+        """
+        Calculates the Hurst exponent on log prices in a numerically stable way.
+        """
+        # --- DEFINITIVE FIX: Dynamically set max_lag and handle edge cases ---
+        max_lag = max(2, len(prices) // 2) # Ensure max_lag is reasonable for the series length
+        lags = range(2, max_lag)
+
+        if len(prices) < max_lag: return 0.5
+
+        log_prices = np.log(prices)
+
+        tau = []
+        valid_lags = []
+        for lag in lags:
+            if len(log_prices) > lag:
+                std_dev = np.std(np.subtract(log_prices[lag:], log_prices[:-lag]))
+                if std_dev > 1e-9:
+                    tau.append(std_dev)
+                    valid_lags.append(lag)
+
+        if len(tau) < 2: return 0.5
+
+        log_tau = np.log(tau)
+        log_lags = np.log(valid_lags)
+
+        if not (np.all(np.isfinite(log_lags)) and np.all(np.isfinite(log_tau))): return 0.5
+
+        poly = np.polyfit(log_lags, log_tau, 1)
+        return poly[0]
+
+    def _calculate_volatility_adjusted_size(self, asset_prices: np.ndarray) -> float:
+        """Calculates position size based on inverse volatility."""
+        vol_lookback = self.params["VOLATILITY_LOOKBACK"]
+        if len(asset_prices) < vol_lookback: return 0
+
+        returns = np.diff(asset_prices[-vol_lookback:]) / (asset_prices[-vol_lookback:-1] + 1e-9)
+        realized_vol = np.std(returns) * np.sqrt(252)
+
+        if realized_vol < 1e-9: return 0
+
+        scaling_factor = self.params["TARGET_ANNUAL_VOL"] / realized_vol
+        return min(scaling_factor * self.max_position_size, self.max_position_size)
+
+    def _find_optimal_emas(self, prcSoFar: np.ndarray):
+        """Finds the best EMA parameters for mean-reverting assets."""
+        optimization_window = prcSoFar[:, -self.params["OPTIMIZATION_LOOKBACK"]:]
+        new_optimal_params = {}
+
+
+        hurst_values_log = []
+        for asset_idx in range(prcSoFar.shape[0]):
+            asset_prices = optimization_window[asset_idx]
+
+            hurst = self._calculate_hurst_exponent(asset_prices)
+            hurst_values_log.append(f"Asset {asset_idx}: H={hurst:.2f}")
+
+            if hurst < self.params["HURST_THRESHOLD"]:
+                continue
+
+            best_score, best_params = -np.inf, None
+            for short_w, long_w in product(self.ema_grid["SHORT_WINDOWS"], self.ema_grid["LONG_WINDOWS"]):
+                if short_w >= long_w: continue
+
+                short_ema = self._calculate_ema(asset_prices, short_w)
+                long_ema = self._calculate_ema(asset_prices, long_w)
+
+                signals = np.where(short_ema > long_ema, -1, 1)
+                positions = signals[:-1]
+                price_changes = np.diff(asset_prices)
+
+                pnl = positions * price_changes
+
+                if len(pnl) > 1 and np.std(pnl) > 0:
+                    score = np.mean(pnl) - 0.1 * np.std(pnl)
+                    if score > best_score:
+                        best_score = score
+                        best_params = {'short': short_w, 'long': long_w}
+
+            if best_params:
+                new_optimal_params[asset_idx] = best_params
+        self.optimal_ema_params = new_optimal_params
+
+    def get_my_positions(self, prcSoFar: np.ndarray) -> np.ndarray:
+        """The main strategy logic, now encapsulated as a class method."""
         current_day = prcSoFar.shape[1]
 
-        zscore_lookback = self.params['ZSCORE_LOOKBACK']
-        adaptive_start_day = self.params['ADAPTIVE_START_DAY']
-        entry_threshold = self.params['ENTRY_THRESHOLD']
-        stop_loss_threshold = self.params['STOP_LOSS_THRESHOLD']
-        position_size = self.params['POSITION_SIZE']
+        trading_start_day = self.params["OPTIMIZATION_LOOKBACK"]
+        if current_day < trading_start_day:
+            return np.zeros(50)
 
-        if current_day < zscore_lookback:
-            return final_positions
+        if self.last_optimization_day == 0 or current_day >= self.last_optimization_day + self.params["RECALCULATION_FREQUENCY"]:
+            self._find_optimal_emas(prcSoFar)
+            self.last_optimization_day = current_day
 
-        for pair_info in self.static_ratios:
-            pair = pair_info['pair']
-            asset1_idx, asset2_idx = pair
+        if not self.optimal_ema_params:
+            return np.zeros(50)
 
-            if current_day < adaptive_start_day:
-                hedge_ratio = pair_info['static_hedge_ratio']
+        final_positions = np.zeros(50)
+        for asset_idx, params in self.optimal_ema_params.items():
+            asset_prices = prcSoFar[asset_idx]
+            short_ema = self._calculate_ema(asset_prices, params['short'])
+            long_ema = self._calculate_ema(asset_prices, params['long'])
+
+            current_signal = 0
+            if not np.isnan(short_ema[-1]) and not np.isnan(long_ema[-1]):
+                if short_ema[-1] > long_ema[-1]: current_signal = -1
+                elif short_ema[-1] < long_ema[-1]: current_signal = 1
+
+            if current_signal != 0:
+                adjusted_size = self._calculate_volatility_adjusted_size(asset_prices)
+                final_positions[asset_idx] = current_signal * (adjusted_size / (asset_prices[-1] + 1e-9))
             else:
-                regression_window = prcSoFar[:, :current_day]
-                y, x = regression_window[asset1_idx, :], regression_window[asset2_idx, :]
-                model = sm.OLS(y, sm.add_constant(x)).fit()
-                hedge_ratio = model.params[1]
+                final_positions[asset_idx] = 0
 
-            zscore_window = prcSoFar[:, -zscore_lookback:]
-            spread_series = zscore_window[asset1_idx, :] - hedge_ratio * zscore_window[asset2_idx, :]
-            if np.std(spread_series) < 1e-6: continue
-            
-            current_spread = prcSoFar[asset1_idx, -1] - hedge_ratio * prcSoFar[asset2_idx, -1]
-            z_score = (current_spread - np.mean(spread_series)) / np.std(spread_series)
-
-            pair_key = str(pair)
-            current_pos_state = self.pair_position_state.get(pair_key, 0)
-            new_pos_state = current_pos_state
-
-            if current_pos_state == 0:
-                if z_score < -entry_threshold: new_pos_state = 1
-                elif z_score > entry_threshold: new_pos_state = -1
-            elif current_pos_state == 1:
-                if z_score >= 0 or z_score < -stop_loss_threshold: new_pos_state = 0
-            elif current_pos_state == -1:
-                if z_score <= 0 or z_score > stop_loss_threshold: new_pos_state = 0
-            
-            self.pair_position_state[pair_key] = new_pos_state
-
-            if new_pos_state != 0:
-                pos_asset1 = new_pos_state * (position_size / prcSoFar[asset1_idx, -1])
-                final_positions[asset1_idx] += pos_asset1
-                pos_asset2 = - (pos_asset1 * hedge_ratio * prcSoFar[asset1_idx, -1]) / prcSoFar[asset2_idx, -1]
-                final_positions[asset2_idx] += pos_asset2
-                
         return final_positions.astype(int)
 
 # ==============================================================================
-# SECTION 4: PARALLEL BACKTESTING WORKER FUNCTION
+# SECTION 3: PARALLEL BACKTESTING WORKER
 # ==============================================================================
-def run_backtest_worker(params, static_ratios, prices_path):
-    """
-    This function is what each parallel process will execute.
-    It takes one set of parameters, runs a full backtest, and returns the result.
-    """
+def run_backtest_worker(params, prices_path):
+    """This function is what each parallel process will execute."""
     try:
-        strategy = PairsTradingStrategy(params=params, static_ratios=static_ratios)
+        strategy = AdaptiveEMA(params=params)
+
         bt_params = Params(
-            strategy_function=strategy.getMyPosition,
+            strategy_function=strategy.get_my_positions,
             start_day=1,
-            end_day=750,
             prices_filepath=prices_path
         )
         backtester = Backtester(bt_params)
-        results = backtester.run(start_day=bt_params.start_day, end_day=bt_params.end_day)
-        
-        start_index_for_test = 500
-        test_period_pnl = results['daily_pnl'][start_index_for_test:]
-        
-        if len(test_period_pnl) > 0 and np.std(test_period_pnl) > 0:
-            score = np.mean(test_period_pnl) - 0.1 * np.std(test_period_pnl)
+        results = backtester.run(start_day=1, end_day=750)
+
+        target_pnl = results['daily_pnl']
+
+        if len(target_pnl) > 1 and np.std(target_pnl) > 0:
+            score = np.mean(target_pnl) - 0.1 * np.std(target_pnl)
         else:
             score = -np.inf
-            
+
         return {'params': params, 'score': score}
     except Exception as e:
-        # print(f"Error with params {params}: {e}") # Uncomment for deep debugging
-        return {'params': params, 'score': -np.inf}
+        return {'params': params, 'score': -np.inf, 'error': str(e)}
 
 # ==============================================================================
-# SECTION 5: MAIN EXECUTION BLOCK
+# SECTION 4: MAIN EXECUTION BLOCK
 # ==============================================================================
 if __name__ == '__main__':
-    # freeze_support() is necessary for creating frozen executables
     multiprocessing.freeze_support()
-    
-    # --- SETUP ---
-    try:
-        SRC_DIR = os.path.dirname(os.path.abspath(__file__))
-        PARENT_DIR = os.path.dirname(SRC_DIR)
-    except NameError:
-        SRC_DIR, PARENT_DIR = ".", ".."
 
-    PRICES_PATH = os.path.join(PARENT_DIR, "prices.txt")
-    prices_df = pd.read_csv(PRICES_PATH, header=None, sep=r'\s+')
-    
-    # --- Step 1: Run the one-time analysis ---
-    initial_static_ratios = create_initial_static_ratios(prices_df, static_calculation_period=500)
+    PRICES_PATH = os.path.join(parent_dir, "prices.txt")
 
-    # --- Step 2: Define the grid ---
     grid = {
-        "ADAPTIVE_START_DAY": [501],
-        "ZSCORE_LOOKBACK": (20, 151, 10),
-        "ENTRY_THRESHOLD": (0.1, 2.51, 0.1),
-        "STOP_LOSS_THRESHOLD": (0.25, 4.01, 0.25),
-        "POSITION_SIZE": [10000]
+        "OPTIMIZATION_LOOKBACK": (50, 501, 50),
+        "RECALCULATION_FREQUENCY": (25, 251, 25),
+        "VOLATILITY_LOOKBACK": (20, 121, 20),
+        "TARGET_ANNUAL_VOL": np.arange(0.1, 0.51, 0.1).tolist(),
+        "HURST_THRESHOLD": [0.4,0.5,0.6],
     }
-    
-    processed_grid = {}
-    for key, value in grid.items():
-        if isinstance(value, tuple) and len(value) == 3:
-            processed_grid[key] = np.arange(value[0], value[1], value[2]).tolist()
-        else:
-            processed_grid[key] = value
 
-    param_combinations = list(product(*processed_grid.values()))
-    param_names = list(processed_grid.keys())
-    
-    print(f"--- Starting Parallel Grid Search: {len(param_combinations)} combinations ---")
-    print(f"--- Optimizing for performance ONLY in days 501-750 ---")
+    param_combinations = [dict(zip(grid.keys(), combo)) for combo in product(*[np.arange(*v).round(2).tolist() if isinstance(v, tuple) else v for k, v in grid.items()])]
+
+    print(f"--- Starting Grid Search for Adaptive Strategy: {len(param_combinations)} combinations ---")
     results_list = []
 
-    # --- Step 3: Run grid search in parallel ---
     with ProcessPoolExecutor(max_workers=os.cpu_count()) as executor:
-        # Create a list of jobs to run
-        futures = [executor.submit(run_backtest_worker, dict(zip(param_names, comb)), initial_static_ratios, PRICES_PATH)
-                   for comb in param_combinations]
-        
-        # Process results as they are completed
+        futures = [executor.submit(run_backtest_worker, combo, PRICES_PATH) for combo in param_combinations]
+
         for i, future in enumerate(as_completed(futures)):
             result = future.result()
             results_list.append(result)
-            print(f"Completed {i+1}/{len(param_combinations)} -> Score: {result['score']:.2f} | Params: {result['params']}")
+            error_msg = result.get('error')
+            if error_msg:
+                print(f"Completed {i+1}/{len(param_combinations)} -> FAILED with error: {error_msg}")
+            else:
+                print(f"Completed {i+1}/{len(param_combinations)} -> Score: {result.get('score', 'FAIL'):.2f}")
 
-    # --- Step 4: Find and print the best results ---
     if results_list:
-        results_df = pd.DataFrame(results_list)
-        # We need to handle the 'params' column which is a dictionary
-        params_df = pd.DataFrame(results_df['params'].tolist())
-        scores_df = results_df[['score']]
-        full_results_df = pd.concat([params_df, scores_df], axis=1)
+        valid_results = [r for r in results_list if r['score'] > -np.inf]
+        if valid_results:
+            results_df = pd.DataFrame(valid_results).sort_values(by='score', ascending=False).reset_index(drop=True)
+            params_df = pd.json_normalize(results_df['params'])
+            final_display_df = pd.concat([results_df[['score']], params_df], axis=1)
 
-        best_results_df = full_results_df.sort_values(by='score', ascending=False).reset_index(drop=True)
-        
-        results_filename = "grid_search_results.csv"
-        best_results_df.to_csv(results_filename, index=False)
-        
-        print("\n\n--- Grid Search Complete ---")
-        print(f"\nSUCCESS: All {len(best_results_df)} results have been saved to '{results_filename}'")
-        print("\n--- Top 5 Best Parameter Sets for the Adaptive Period (Days 501-750) ---")
-        print(best_results_df.head(5).to_string())
+            results_filename = "adaptive_EMA_grid_search_results.csv"
+            final_display_df.to_csv(results_filename, index=False)
+
+            print("\n\n--- Grid Search Complete ---")
+            print(f"\nSUCCESS: All results saved to '{results_filename}'")
+            print("\n--- Top 5 Best Overall Parameter Sets ---")
+            print(final_display_df.head(5).to_string())
+        else:
+            print("No successful backtest results were obtained.")
     else:
-        print("No successful backtest results were obtained.")
+        print("No results were generated by the grid search.")

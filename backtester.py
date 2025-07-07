@@ -26,7 +26,7 @@ PLOT_COLORS: Dict[str, str] = {
 	"sharpe_change": "#d62728",
 }
 
-default_strategy_filepath: str = "./main.py"
+default_strategy_filepath: str = "main.py"
 default_strategy_function_name: str = "getMyPosition"
 strategy_file_not_found_message: str = "Strategy file not found"
 could_not_load_spec_message: str = "Could not load spec for module from strategy file"

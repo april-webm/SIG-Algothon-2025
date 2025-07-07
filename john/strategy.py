@@ -516,8 +516,8 @@ def grid_search(price_history: ndarray, grid_search_lookback: int) -> None:
 positions: ndarray = np.zeros(50)
 
 def get_johns_positions(prices_so_far: ndarray) -> ndarray:
-    # Grid search every 50 days past 400 days
-    if len(prices_so_far[0]) > 400 and len(prices_so_far[0]) % 50 == 0:
+    # Grid search every 50 days past 750 days
+    if len(prices_so_far[0]) > 750 and len(prices_so_far[0]) % 50 == 0:
         print(f"Grid searching on day {len(prices_so_far[0])}")
         grid_search(prices_so_far, 100)
 

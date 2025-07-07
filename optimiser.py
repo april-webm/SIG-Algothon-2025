@@ -113,7 +113,7 @@ if __name__ == '__main__':
     multiprocessing.freeze_support()
     
     # --- CONFIGURATION ---
-    PRICES_PATH = "./prices.txt"
+    PRICES_PATH = "prices.txt"
     OPTIMIZATION_START_DAY = 600
     OPTIMIZATION_END_DAY = 750
     OUTPUT_ALLOCATION_FILE = "strategy_allocations.py"

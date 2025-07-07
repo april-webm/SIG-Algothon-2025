@@ -1,12 +1,10 @@
-from typing import List, TypedDict, Dict
+from typing import List, Dict
 
-from cffi.model import FunctionPtrType
 from pandas import Series
 from numpy import ndarray
 import numpy as np
 import pandas as pd
-from backtester import Backtester, BacktesterResults, Params, load_get_positions_function
-from types import FunctionType
+from backtester import Backtester, BacktesterResults, Params
 import json
 
 positions_limit: int = 10000
