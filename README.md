@@ -43,4 +43,4 @@ To combat this, we implemented a rolling optimisation method which would look at
 strategies, and reallocate (or bench) assets that were underperforming. The issue with this is if the first 125 days (until the reallocation is triggered
 is all negative, every asset can be benched. This is what my assumption is for why the model failed on the data. The opimisation method benched all assets, 
 resulting in only 125 days of trading, all of which were losses. The scoring for this competition was based off the formula `Mean PnL - 0.1*Std Dev`, so
-if the first set of days were negative, and all other days result in 0, the score will still become very low. 
+if the first set of days were negative, and all other days result in 0, the score will still remain low.
