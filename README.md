@@ -34,3 +34,5 @@ To arrive at our final strategy, we tried and tested many approaches such as:
   before the general round submission deadline.
 
 Overall our team spent over 600 hours testing, analysing and implementing strategies for this competition. 
+The final submission for the general round is found inside the His name is Yang folder. The other folders contain 
+our notebooks, testing and other files.
