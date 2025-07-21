@@ -4,7 +4,7 @@ This repository contains our strategy implementations for the UNSW x Susquehanna
 Group Algothon. 
 
 ### Team Members
-[John Pioc](https://www.linkedin.com/in/john-pioc/), [April Kidd](https://www.linkedin.com/in/aprilkidd/), [Kshitiz Suwal](https://www.linkedin.com/in/kshitizsuwal/)
+[John Pioc](https://www.linkedin.com/in/john-pioc/), [April Kidd](https://www.linkedin.com/in/aprilkidd/), [Kshitiz Suwal](https://www.linkedin.com/in/kshitizsuwal/), [Jack Ryan](https://www.linkedin.com/in/jack-ryan-7ab1a5294) 
 
 ### Scoring
 | Round         | Placing |
