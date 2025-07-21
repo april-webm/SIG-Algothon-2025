@@ -12,7 +12,7 @@ Group Algothon.
 | Interim Round | 39th    |
 | General Round | 63rd    |
 
-~ Out of approximately 350 teams
+<sup><sub>Out of approx 350 teams</sub></sup>
 
 ### Overview
 The Algothon is a algorithmic-trading competition where teams create Python-based trading 
