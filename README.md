@@ -5,11 +5,14 @@ Group Algothon.
 
 ### Team Members
 [John Pioc](https://www.linkedin.com/in/john-pioc/), [April Kidd](https://www.linkedin.com/in/aprilkidd/), [Kshitiz Suwal](https://www.linkedin.com/in/kshitizsuwal/)
+
 ### Scoring
 | Round         | Placing |
 |---------------|---------|
 | Interim Round | 39th    |
 | General Round | 63rd    |
+
+
 The Algothon is a algorithmic-trading competition where teams create Python-based trading 
 algorithms to trade financial instruments inside a simulated market. 
 
@@ -25,5 +28,9 @@ To arrive at our final strategy, we tried and tested many approaches such as:
 - Pairs Trading. This was dropped as market regime and its statistical properties changed 
   drastically multiple times within the seen and unseen dataset, and retraining our model was 
   too computationally expensive with respect to the 10 minute algorithim runtime
+- Geometric Brownian Motion. The drift parameter (often denoted by 'μ') in GBM represents the expected 
+  average rate of return of the asset. This can be used to find overall momentum by fitting GBM over a 
+  lookback. This had promising results, but was unable to be implemented robustly
+  before the general round submission deadline.
 
-In the end, we ended up placing 63rd out of 180 teams.
+Overall our team spent over 600 hours testing, analysing and implementing strategies for this competition. 
